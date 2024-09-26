@@ -1,5 +1,5 @@
 {
-  "name": "chi-react",
+  "name": "marejs",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -31,4 +31,6 @@
     "nodemon": "^3.1.7",
     "vite": "^5.4.1"
   }
+,
+   "license": "MIT"
 }
