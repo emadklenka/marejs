@@ -50,7 +50,10 @@ const ComponentWrapper = ({ Component, Layouts, path }) => {
   //   content = <Layout {...(match ? match.params : {})}>{content}</Layout>;
   // });
 
+  //console.log("layouts")
+
   for (let i = 0; i <= Layouts.length - 1; i++) {
+    console.log( "layouts: "+Layouts[i])
     const Layout = Layouts[i];
     content = <Layout {...(match ? match.params : {})}>{content}</Layout>;
   }

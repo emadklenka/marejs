@@ -24,7 +24,7 @@ app.use(session({
 
 // Enable CORS for React
 app.use(cors({
-  origin: 'http://localhost:3000', // Your Vite server
+  origin: 'http://localhost:9999', // Your Vite server
   credentials: true
 }));
 
