@@ -9,7 +9,12 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server/mare_server.js",
-    "client": "vite"
+    "client": "vite",
+
+    "build:client": "vite build",          
+    "build:server": "echo 'No server build step'",  
+    "build": "npm run build:client && npm run build:server",  
+    "start": "node server/mare_server.js"  
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

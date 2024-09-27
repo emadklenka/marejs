@@ -1,4 +1,4 @@
 export default function Home(){
 
-    return (<>Hello /page.jsx</>)
+    return (<>Home    /page.jsx</>)
 }

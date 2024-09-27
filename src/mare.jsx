@@ -25,7 +25,7 @@ const findAllLayouts = (filePath) => {
 const routes = Object.keys(pages).map((filePath) => {
   let routePath = filePath
     .replace("./pages", "")
-    .replace("/page.jsx", "") // Handle index.jsx files as root for the folder
+    .replace("/page.jsx", "") // Handle page.jsx files as root for the folder
     .replace(".jsx", ""); // Remove .jsx extension
 
   routePath = routePath.replace(/\[(\w+)\]/g, ":$1"); // Handle dynamic routes
@@ -38,6 +38,7 @@ const routes = Object.keys(pages).map((filePath) => {
     path: routePath,
     component: Component,
     layouts: Layouts,
+    filePath:filePath //for debugging reasons
   };
 });
 
@@ -45,13 +46,7 @@ const routes = Object.keys(pages).map((filePath) => {
 const ComponentWrapper = ({ Component, Layouts, path }) => {
   const match = useMatch(path);
   let content = <Component {...(match ? match.params : {})} />;
-
-  // Layouts.reverse().forEach((Layout) => {
-  //   content = <Layout {...(match ? match.params : {})}>{content}</Layout>;
-  // });
-
-  //console.log("layouts")
-
+ 
   for (let i = 0; i <= Layouts.length - 1; i++) {
     console.log( "layouts: "+Layouts[i])
     const Layout = Layouts[i];
@@ -81,9 +76,11 @@ const createRoutes = (routes) => {
 // Main Mare component with Layout wrapping all routes
 export default function Mare() {
   
+  debugger
   return (
     <Router>
-      <App>
+      {/*                 The app here acts as a holder layout for the entire app , */}
+      <App> 
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<div />} /> {/* Empty layout content for root */}

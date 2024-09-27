@@ -6,13 +6,16 @@ import session from 'express-session';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import { pathToFileURL } from 'url';
+
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(express.json());
+// Serve static files from the dist directory
+const distPath = path.resolve(__dirname, '../dist');
+app.use(express.static(distPath));
 
 // Middleware to handle sessions (if required)
 app.use(session({
@@ -29,9 +32,6 @@ app.use(cors({
 }));
 
 // Helper function to dynamically import route
-
-
-// Helper function to dynamically import route
 const dynamicImport = async (routePath) => {
   try {
     const route = await import(pathToFileURL(routePath).href);
@@ -42,7 +42,6 @@ const dynamicImport = async (routePath) => {
   }
 };
 
- 
 // Dynamic Route Loader for /api/* requests
 app.use('/api', async (req, res, next) => {
   const routePath = path.join(__dirname, req.path);
@@ -72,8 +71,17 @@ app.use('/api', async (req, res, next) => {
   } else {
     return res.status(404).send('API route not found');
   }
-});//
+});
 
+// Catch-all route: respond with index.html for any other route
+app.get('*', (req, res) => {
+  const indexHtml = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexHtml)) {
+    res.sendFile(indexHtml);
+  } else {
+    res.status(404).send('index.html not found');
+  }
+});
 
 const PORT = 4000;
 app.listen(PORT, () => {
