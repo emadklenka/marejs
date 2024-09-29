@@ -37,14 +37,14 @@ rl.question('Enter your project name: ', (projectName) => {
         const gitFolderPath = path.join(projectPath, '.git');
         if (fs.existsSync(gitFolderPath)) {
             fs.rmSync(gitFolderPath, { recursive: true, force: true });
-            console.log('Removed .git directory to detach from the original repository.');
+          //  console.log('Removed .git directory to detach from the original repository.');
         }
 
         // Remove the index.cjs file
-        const indexFilePath = path.join(projectPath, 'index.cjs');
+        const indexFilePath = path.join(projectPath, 'MareJsInstaller.cjs');
         if (fs.existsSync(indexFilePath)) {
             fs.rmSync(indexFilePath);
-            console.log('Removed index.cjs file.');
+        //    console.log('Removed index.cjs file.');
         }
 
         // Load package.json and remove the bin entry
