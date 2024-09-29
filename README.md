@@ -53,23 +53,9 @@ Make sure you have the following installed:
 
 ### Getting Started
 
-1. Clone the repository:
+npx github:emadklenka/marejs
 
-   ```bash
-   git clone https://github.com/emadklenka/marejs.git](https://github.com/emadklenka/marejs.git)
-   cd marejs
 
-2. Install dependencies using pnpm:
-   
-   pnpm install
-
-3.Run the development server (Vite + Express):
-
-   pnpm run dev
-
-   pnpm run build
-
-   pnpm start
 
 
 
