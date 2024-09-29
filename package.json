@@ -3,24 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "bin": {
-    "marejs": "./index.js"
+    "marejs": "./index.cjs"
   },
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server/mare_server.js",
     "client": "vite",
-
-    "build:client": "vite build",          
-    "build:server": "echo 'No server build step'",  
-    "build": "npm run build:client && npm run build:server",  
-    "start": "node server/mare_server.js"  
+    "build:client": "vite build",
+    "build:server": "echo 'No server build step'",
+    "build": "npm run build:client && npm run build:server",
+    "start": "node server/mare_server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "express-session": "^1.18.0",
+     
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
@@ -38,7 +38,6 @@
     "globals": "^15.9.0",
     "nodemon": "^3.1.7",
     "vite": "^5.4.1"
-  }
-,
-   "license": "MIT"
+  },
+  "license": "MIT"
 }
