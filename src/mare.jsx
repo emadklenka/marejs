@@ -25,11 +25,12 @@ const findAllLayouts = (filePath) => {
 const routes = Object.keys(pages).map((filePath) => {
   let routePath = filePath
     .replace("./pages", "")
-    .replace("/page.jsx", "") // Handle page.jsx files as root for the folder
+    .replace("/page.jsx", "") // Handle index.jsx files as root for the folder
     .replace(".jsx", ""); // Remove .jsx extension
 
   routePath = routePath.replace(/\[(\w+)\]/g, ":$1"); // Handle dynamic routes
   routePath = routePath === "" ? "/" : routePath.replace(/\/$/, ""); // Normalize root path
+  routePath = routePath.toLowerCase();
 
   const Component = React.lazy(pages[filePath]);
   const Layouts = findAllLayouts(filePath);
@@ -38,17 +39,20 @@ const routes = Object.keys(pages).map((filePath) => {
     path: routePath,
     component: Component,
     layouts: Layouts,
-    filePath:filePath //for debugging reasons
   };
 });
+
+// Sort routes by the number of segments (more segments first)
+routes.sort((a, b) => b.path.split("/").length - a.path.split("/").length);
+
+console.log("routes", routes);
 
 // Component wrapper to pass dynamic params as props and wrap with all parent layouts
 const ComponentWrapper = ({ Component, Layouts, path }) => {
   const match = useMatch(path);
   let content = <Component {...(match ? match.params : {})} />;
- 
+
   for (let i = 0; i <= Layouts.length - 1; i++) {
-    console.log( "layouts: "+Layouts[i])
     const Layout = Layouts[i];
     content = <Layout {...(match ? match.params : {})}>{content}</Layout>;
   }
@@ -75,12 +79,9 @@ const createRoutes = (routes) => {
 
 // Main Mare component with Layout wrapping all routes
 export default function Mare() {
-  
-  debugger
   return (
     <Router>
-      {/*                 The app here acts as a holder layout for the entire app , */}
-      <App> 
+      <App>
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<div />} /> {/* Empty layout content for root */}
