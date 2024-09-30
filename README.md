@@ -1,3 +1,6 @@
+![marejs](https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d)
+
+
 # Express + React with File-Based Routing
 
 This project combines **React** for client-side rendering and **Express** for server-side APIs, both utilizing **file-based routing** for seamless route management. The goal is to keep everything organized and dynamic, with minimal hardcoding for routes on both the frontend and backend.
