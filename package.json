@@ -15,7 +15,7 @@
     "build:client": "vite build",
     "build:server": "echo 'No server build step'",
     "build": "npm run build:client && npm run build:server",
-    "start": "node server/mare_server.js"
+    "start": "node .mareJS/mare_server.j"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

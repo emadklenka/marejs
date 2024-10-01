@@ -1,30 +1,39 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import React, { Suspense } from "react";
 import { useMatch } from "react-router-dom";
-import App from "./_app"; // Import the Layout component
+import App from "../src/_app"; // Import the Layout component
 
 // Use Vite's `import.meta.glob` to dynamically load all .jsx files from the /pages directory
-const pages = import.meta.glob("./pages/**/*.jsx");
-const layouts = import.meta.glob("./pages/**/layout.jsx");
+ const pages = import.meta.glob("../src/pages/**/*.jsx");
+const layouts = import.meta.glob("../src/pages/**/layout.jsx");
 
 // Function to find all layout files in the parent directories
 const findAllLayouts = (filePath) => {
   const parts = filePath.split("/");
+
   const layoutComponents = [];
+
   while (parts.length > 1) {
     parts.pop();
+
+    // Adjust to ensure paths match the structure returned by `import.meta.glob`
+     
     const layoutPath = `${parts.join("/")}/layout.jsx`;
+
     if (layouts[layoutPath]) {
       layoutComponents.push(React.lazy(layouts[layoutPath]));
     }
   }
+
   return layoutComponents;
 };
 
+
 // Create a lazy-loaded component map for all the pages
 const routes = Object.keys(pages).map((filePath) => {
+     
   let routePath = filePath
-    .replace("./pages", "")
+    .replace("../src/pages", "")
     .replace("/page.jsx", "") // Handle index.jsx files as root for the folder
     .replace(".jsx", ""); // Remove .jsx extension
 
@@ -62,6 +71,7 @@ const ComponentWrapper = ({ Component, Layouts, path }) => {
 
 // Function to create nested routes with layouts
 const createRoutes = (routes) => {
+ 
   return routes.map(({ path, component: Component, layouts: Layouts }) => (
     <Route key={path} path={path} element={<ComponentWrapper Component={Component} Layouts={Layouts} path={path} />}>
       {routes
