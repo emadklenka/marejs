@@ -2,7 +2,7 @@
 export default function App({children}){
 return(<>
 This is _app.jsx which acts as a wrapper<br/>
-
+ 
     {children}
 </>)
 

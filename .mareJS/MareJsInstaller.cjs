@@ -1,5 +1,5 @@
 //#!/usr/bin/env node
-
+debugger
 const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
@@ -37,14 +37,12 @@ rl.question('Enter your project name: ', (projectName) => {
         const gitFolderPath = path.join(projectPath, '.git');
         if (fs.existsSync(gitFolderPath)) {
             fs.rmSync(gitFolderPath, { recursive: true, force: true });
-          //  console.log('Removed .git directory to detach from the original repository.');
         }
 
-        // Remove the index.cjs file
-        const indexFilePath = path.join(projectPath, 'MareJsInstaller.cjs');
-        if (fs.existsSync(indexFilePath)) {
-            fs.rmSync(indexFilePath);
-        //    console.log('Removed index.cjs file.');
+        // Remove the MareJsInstaller.cjs file from the .mareJS directory
+        const installerFilePath = path.join(projectPath, '.mareJS', 'MareJsInstaller.cjs');
+        if (fs.existsSync(installerFilePath)) {
+            fs.rmSync(installerFilePath);
         }
 
         // Load package.json and remove the bin entry

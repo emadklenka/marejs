@@ -3,11 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "bin": {
-    "marejs": "./MareJsInstaller.cjs"
+    "marejs": ".mareJS/MareJsInstaller.cjs"
   },
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "NODE_ENV=development nodemon ./.mareJS/mare_server.js"
+
+,
     "server": "nodemon server/mare_server.js",
     "client": "vite",
     "build:client": "vite build",
