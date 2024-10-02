@@ -31,11 +31,8 @@ const findAllLayouts = (filePath) => {
 
 // Create a lazy-loaded component map for all the pages
 const routes = Object.keys(pages).map((filePath) => {
-     
-  let routePath = filePath
-    .replace("../src/pages", "")
-    .replace("/page.jsx", "") // Handle index.jsx files as root for the folder
-    .replace(".jsx", ""); // Remove .jsx extension
+  let routePath = normalizePath(filePath);  
+ 
 
   routePath = routePath.replace(/\[(\w+)\]/g, ":$1"); // Handle dynamic routes
   routePath = routePath === "" ? "/" : routePath.replace(/\/$/, ""); // Normalize root path
@@ -107,4 +104,23 @@ export default function Mare() {
 // Not Found component for catch-all route
 const NotFound = () => {
   return <>404 - Page Not Found</>;
+};
+//////////////
+// Function to normalize the route path, handling folder names with `()` by excluding them from the path
+function normalizePath  (filePath)   {
+  let routePath = filePath
+    .replace("../src/pages", "")
+    .replace("./pages", "")
+    .replace("/page.jsx", "") // Handle index.jsx files as root for the folder
+    .replace(".jsx", "") // Remove .jsx extension
+    .replace(/\[(\w+)\]/g, ":$1"); // Handle dynamic routes
+
+  // Remove folder names wrapped in ()
+  routePath = routePath
+    .split("/")
+    .filter((segment) => !segment.startsWith("(") || !segment.endsWith(")"))
+    .join("/");
+
+  routePath = routePath === "" ? "/" : routePath.replace(/\/$/, ""); // Normalize root path
+  return routePath.toLowerCase();
 };

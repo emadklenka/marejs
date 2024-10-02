@@ -1,12 +1,13 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
-import session from 'express-session';
-import bcrypt from 'bcryptjs';
-import cors from 'cors';
+import { fileURLToPath } from 'url'; 
+import net from 'net'; 
 import { pathToFileURL } from 'url';
-
+// import getMarecors   from '../api/__mare_serversettings/cors';
+// import { getMareSession } from '../api/__mare_serversettings/session';
+import {getMarecors} from '../api/__mare_serversettings/cors.js';
+ import { getMareSession } from '../api/__mare_serversettings/session.js';
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,21 +16,10 @@ const app = express();
 const isDev = process.env.NODE_ENV === 'development';
 
 // Middleware to handle sessions (if required)
-app.use(session({
-  secret: 'your_secret_key',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
-// // Enable CORS for React in development mode
-// if (isDev) {
-//   app.use(cors({
-//     origin: 'http://localhost:9999', // Your Vite server
-//     credentials: true
-//   }));
-// }
-
+const msession=getMareSession()
+if (msession) app.use(msession);
+const mcors=getMarecors()
+if ( mcors){ app.use(mcors)} 
 // Helper function to dynamically import route
 const dynamicImport = async (routePath) => {
   try {
@@ -117,9 +107,8 @@ if (isDev) {
 
 /////////////////////////////////////////////////////////////////////////
  // Function to check if a port is available
- import net from 'net';
 
-
+ 
 const checkPortAvailable = (port) => {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -164,3 +153,4 @@ const findAvailablePort = async (startingPort) => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 })();
+//////////////////////////////////////////////////////////////////
