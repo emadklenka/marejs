@@ -1,27 +1,30 @@
-import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url'; 
-import net from 'net'; 
-import { pathToFileURL } from 'url';
+import express from "express";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import net from "net";
+import { pathToFileURL } from "url";
 // import getMarecors   from '../api/__mare_serversettings/cors';
 // import { getMareSession } from '../api/__mare_serversettings/session';
-import {getMarecors} from '../api/__mare_serversettings/cors.js';
- import { getMareSession } from '../api/__mare_serversettings/session.js';
+import { getMarecors } from "../api/__mare_serversettings/cors.js";
+import { getMareSession } from "../api/__mare_serversettings/session.js";
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === "development";
 
 // Middleware to handle sessions (if required)
-const msession=getMareSession()
+const msession = getMareSession();
 if (msession) app.use(msession);
-const mcors=getMarecors()
-if ( mcors){ app.use(mcors)} 
+const mcors = getMarecors();
+if (mcors) {
+  app.use(mcors);
+}
 // Helper function to dynamically import route
 const dynamicImport = async (routePath) => {
+ 
   try {
     const route = await import(pathToFileURL(routePath).href);
     return route.default;
@@ -32,18 +35,21 @@ const dynamicImport = async (routePath) => {
 };
 
 // Dynamic Route Loader for /api/* requests
-app.use('/api', async (req, res, next) => {
-  debugger
+app.use("/api", async (req, res, next) => {
   let routePath = path.join(__dirname, req.path);
 
   // Prevent directory traversal attempts like ../../ or ./
-  if (req.path.includes('..') || req.path.startsWith('./') || req.path.startsWith('.')) {
-    return res.status(400).send('Invalid API path');
+  if (
+    req.path.includes("..") ||
+    req.path.startsWith("./") ||
+    req.path.startsWith(".")
+  ) {
+    return res.status(400).send("Invalid API path");
   }
- debugger
-  routePath = routePath.replace('.mareJS', 'api');
 
-  const indexFilePath = path.join(routePath, 'index.js');
+  routePath = routePath.replace(".mareJS", "api");
+
+  const indexFilePath = path.join(routePath, "index.js");
   const filePath = `${routePath}.js`; // Check for pathname.js
 
   let routeHandler = null;
@@ -61,14 +67,15 @@ app.use('/api', async (req, res, next) => {
   if (routeHandler) {
     return routeHandler(req, res, next);
   } else {
-    return res.status(404).send('API route not found');
+    routeHandler = await dynamicImport("api/default.js");
+    return routeHandler(req, res, next);
   }
 });
- 
+
 // Vite Dev Server for Development Mode
 if (isDev) {
-  console.log("----- Development Mode Server ----------------")
-  const { createServer: createViteServer } = await import('vite');
+  console.log("----- Development Mode Server ----------------");
+  const { createServer: createViteServer } = await import("vite");
 
   const vite = await createViteServer({
     server: { middlewareMode: true },
@@ -78,11 +85,11 @@ if (isDev) {
   app.use(vite.middlewares);
 
   // Catch-all route to serve the index.html through Vite in development
-  app.get('*', async (req, res) => {
+  app.get("*", async (req, res) => {
     const url = req.originalUrl;
     try {
-      const template = await vite.transformIndexHtml(url, '');
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      const template = await vite.transformIndexHtml(url, "");
+      res.status(200).set({ "Content-Type": "text/html" }).end(template);
     } catch (err) {
       vite.ssrFixStacktrace(err);
       console.error(err);
@@ -91,37 +98,36 @@ if (isDev) {
   });
 } else {
   // Production Mode: Serve static files from the dist directory
-  const distPath = path.resolve(__dirname, '../dist');
+  const distPath = path.resolve(__dirname, "../dist");
   app.use(express.static(distPath));
 
   // Catch-all route: Serve the built index.html for any other route
-  app.get('*', (req, res) => {
-    const indexHtml = path.join(distPath, 'index.html');
+  app.get("*", (req, res) => {
+    const indexHtml = path.join(distPath, "index.html");
     if (fs.existsSync(indexHtml)) {
       res.sendFile(indexHtml);
     } else {
-      res.status(404).send('index.html not found');
+      res.status(404).send("index.html not found");
     }
   });
 }
 
 /////////////////////////////////////////////////////////////////////////
- // Function to check if a port is available
+// Function to check if a port is available
 
- 
 const checkPortAvailable = (port) => {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
 
-    server.once('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
+    server.once("error", (err) => {
+      if (err.code === "EADDRINUSE") {
         resolve(false); // Port is in use
       } else {
         reject(err); // Some other error
       }
     });
 
-    server.once('listening', () => {
+    server.once("listening", () => {
       server.close();
       resolve(true); // Port is available
     });
