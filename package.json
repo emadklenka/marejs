@@ -1,7 +1,6 @@
 {
   "name": "marejs",
   "author": {"name": "Emad Omar"},
-  "private": true,
   "version": "0.0.0",
   "bin": {
     "marejs": "./.mareJS/MareJsInstaller.cjs"
