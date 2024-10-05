@@ -39,6 +39,11 @@ rl.question('Enter your project name: ', (projectName) => {
             fs.rmSync(gitFolderPath, { recursive: true, force: true });
         }
 
+        const gitFolderPath2= path.join(projectPath, '.github');
+        if (fs.existsSync(gitFolderPath2)) {
+            fs.rmSync(gitFolderPath2, { recursive: true, force: true });
+        }
+
         // Remove the MareJsInstaller.cjs file from the .mareJS directory
         const installerFilePath = path.join(projectPath, '.mareJS', 'MareJsInstaller.cjs');
         if (fs.existsSync(installerFilePath)) {
