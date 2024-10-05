@@ -7,7 +7,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon ./.mareJS/mare_server.js"
+    "dev": "concurrently \"npm run server\" \"npm run client\""
 
 ,
     "server": "nodemon server/mare_server.js",

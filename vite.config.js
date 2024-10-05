@@ -4,6 +4,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    middlewareMode: true, // Enable middleware mode
-  }
+    port: 3000,
+    proxy: {
+      "/api": {
+        target: "http://localhost:4000", // Your Express server port
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

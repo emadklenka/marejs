@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev =false ;// process.env.NODE_ENV === "development";
 
 // Middleware to handle sessions (if required)
 const msession = getMareSession();
@@ -65,7 +65,11 @@ app.use("/api", async (req, res, next) => {
     routeHandler = await dynamicImport(filePath);
   }
 
-  if (!routeHandler) {
+
+  const segments = req.path.split("/").filter(Boolean); ///viewfile/[test]/[id].js => ["viewfile","[test]","[id]"]
+  const parentElement = segments.shift(); //parenteElement = viewfile , segments = ["[test]","[id]"]
+ 
+  if (!routeHandler &&parentElement) {
     //Check if the api/folder has dynamic route files.
     //If the folder has dynamic routes,start adding dynamic route names to params variable.
     //then call the file of the dynamic route
@@ -77,11 +81,9 @@ app.use("/api", async (req, res, next) => {
 
     //Taking /viewFile/[test]/[id].js as an example
     // Split the request path into segments and filter out any empty segments
-    const segments = req.path.split("/").filter(Boolean); ///viewfile/[test]/[id].js => ["viewfile","[test]","[id]"]
 
     // Remove the first segment and store it in parentElement
-    const parentElement = segments.shift(); //parenteElement = viewfile , segments = ["[test]","[id]"]
-
+  
     // Construct the initial parent path using __dirname and parentElement
     let parentPath = path.join(__dirname, "..", "api", parentElement); //parentPath = (base project dir)/viewfile
 
