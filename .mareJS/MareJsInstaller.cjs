@@ -1,5 +1,4 @@
 //#!/usr/bin/env node
-debugger
 const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
