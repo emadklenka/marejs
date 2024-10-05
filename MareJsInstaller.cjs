@@ -45,7 +45,7 @@ rl.question('Enter your project name: ', (projectName) => {
         }
 
         // Remove the MareJsInstaller.cjs file from the .mareJS directory
-        const installerFilePath = path.join(projectPath, '.mareJS', 'MareJsInstaller.cjs');
+        const installerFilePath = path.join(projectPath, 'MareJsInstaller.cjs');
         if (fs.existsSync(installerFilePath)) {
             fs.rmSync(installerFilePath);
         }
