@@ -9,6 +9,7 @@ const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+console.log('Starting MareJsInstaller...');
 
 // Ask the user for the project name
 rl.question('Enter your project name: ', (projectName) => {

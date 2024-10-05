@@ -3,7 +3,7 @@
   "author": {"name": "Emad Omar"},
   "version": "0.0.0",
   "bin": {
-    "marejs": "./.mareJS/MareJsInstaller.cjs"
+    "marejs": "MareJsInstaller.cjs"
   },
   "type": "module",
   "scripts": {
