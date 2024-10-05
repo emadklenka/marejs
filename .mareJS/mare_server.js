@@ -13,6 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.use(express.json());
+
 const isDev = process.env.NODE_ENV === "development";
 
 // Middleware to handle sessions (if required)
@@ -22,9 +24,12 @@ const mcors = getMarecors();
 if (mcors) {
   app.use(mcors);
 }
+//////////
+import { mareMiddleWear } from "../api/__mare_serversettings/middlewear.js";
+app.use(mareMiddleWear);
+
 // Helper function to dynamically import route
-const dynamicImport = async (routePath) => {
- 
+const dynamicImport = async (routePath) => { 
   try {
     const route = await import(pathToFileURL(routePath).href);
     return route.default;
@@ -39,11 +44,7 @@ app.use("/api", async (req, res, next) => {
   let routePath = path.join(__dirname, req.path);
 
   // Prevent directory traversal attempts like ../../ or ./
-  if (
-    req.path.includes("..") ||
-    req.path.startsWith("./") ||
-    req.path.startsWith(".")
-  ) {
+  if (req.path.includes("..") || req.path.startsWith("./") || req.path.startsWith(".")) {
     return res.status(400).send("Invalid API path");
   }
 
@@ -64,11 +65,81 @@ app.use("/api", async (req, res, next) => {
     routeHandler = await dynamicImport(filePath);
   }
 
+  if (!routeHandler) {
+    //Check if the api/folder has dynamic route files.
+    //If the folder has dynamic routes,start adding dynamic route names to params variable.
+    //then call the file of the dynamic route
+    //for example:
+    //If i have /viewfile/[test]/[id].js
+    //and I get an api call of /viewfile/233/21 then call /viewfile/[test]/[id].js
+    //and pass the params as {test:233,id:21}
+    //and if no matching route, then proceed to calling the nats
+
+    //Taking /viewFile/[test]/[id].js as an example
+    // Split the request path into segments and filter out any empty segments
+    const segments = req.path.split("/").filter(Boolean); ///viewfile/[test]/[id].js => ["viewfile","[test]","[id]"]
+
+    // Remove the first segment and store it in parentElement
+    const parentElement = segments.shift(); //parenteElement = viewfile , segments = ["[test]","[id]"]
+
+    // Construct the initial parent path using __dirname and parentElement
+    let parentPath = path.join(__dirname, "..", "api", parentElement); //parentPath = (base project dir)/viewfile
+
+    // Initialize an empty object to store dynamic parameters
+    let params = {};
+
+    if (fs.existsSync(parentPath)) {
+      // Iterate through the remaining segments
+      for (let i = 0; i < segments.length; i++) {
+        // Check if the current segment exists as a directory or file in the parent path
+        if (fs.existsSync(path.join(parentPath, segments[i]))) {
+          // Update the parent path to include the current segment
+          parentPath = path.join(parentPath, segments[i]); //in case of no dynamic route, parentPath = (base project dir)/viewfile/(file)
+        } else {
+          // If the current segment does not exist, check for dynamic files in the parent path
+          let files = fs.readdirSync(parentPath);
+          for (let j = 0; j < files.length; j++) {
+            // Check if the file name starts with '[' indicating a dynamic segment
+            if (files[j].startsWith("[")) {
+              // Update the parent path to include the dynamic file
+              parentPath = path.join(parentPath, files[j]); //parentPath = (base project dir)/viewfile/[test] Then (base project dir)/viewfile/[test]/[id].js
+
+              // Extract the parameter name from the dynamic file name (e.g., [param].js)
+              const paramName = files[j].slice(1, files[j].indexOf("]")); //paramName = test then paramName = id
+
+              // Add the dynamic segment value to the params object with the parameter name
+              params[paramName] = segments[i]; //params = {test:233} then params = {test:233,id:21}
+              break; //stop looping through all the parent files.
+            }
+          }
+        }
+      }
+    }
+
+    // Check if the final parent path exists
+    if (fs.existsSync(parentPath)) {
+      // Dynamically import the route handler from the final parent path
+      routeHandler = await dynamicImport(parentPath);
+      if (routeHandler) {
+        // If a route handler is found, add the dynamic parameters to the request object
+        req.params = params;
+      }
+    }
+  }
+
   if (routeHandler) {
     return routeHandler(req, res, next);
-  } else {
-    routeHandler = await dynamicImport("api/default.js");
-    return routeHandler(req, res, next);
+  }
+
+  const defaultFilePath = "api/default.js";
+  if (fs.existsSync(defaultFilePath)) {
+    routeHandler = await dynamicImport(defaultFilePath);
+    try {
+      return routeHandler(req, res, next);
+    } catch (e) {
+      console.error("Error in /api/default route :", e);
+      res.status(500).end("Server Error");
+    }
   }
 });
 
@@ -152,7 +223,7 @@ const findAvailablePort = async (startingPort) => {
 };
 
 (async () => {
-  const startingPort = process.env.PORT || 5000;
+  const startingPort = process.env.PORT || 4000;
   const PORT = await findAvailablePort(startingPort);
 
   app.listen(PORT, () => {

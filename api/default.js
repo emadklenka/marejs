@@ -5,4 +5,5 @@ export default (req, res) => {
 
    
     return res.status(404).send('MareJS Server API route not found');
+    //You can have your own default API route here
   };
