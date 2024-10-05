@@ -1,65 +1,198 @@
-![marejs](https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d)
 
+![MareJS](https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d)
 
-# Express + React with File-Based Routing
+# MareJS
 
-This project combines **React** for client-side rendering and **Express** for server-side APIs, both utilizing **file-based routing** for seamless route management. The goal is to keep everything organized and dynamic, with minimal hardcoding for routes on both the frontend and backend.
+MareJS is a full-stack JavaScript framework that simplifies web development by combining Express.js for backend APIs and React for frontend rendering. It utilizes file-based routing for both client-side and server-side, allowing developers to focus on building features rather than configuring routes.
 
 ## Features
 
-- **React + Vite**: Fast and minimal setup with Hot Module Replacement (HMR) for React using Vite.
-- **Express API**: Easily expandable backend built with Express, handling server-side routes in a file-based manner similar to Next.js.
-- **File-Based Routing**:
-  - **Client-side routing**: Automatically loads React components from the `/pages` directory.
-  - **Server-side routing**: Dynamically maps Express API routes from the `/api` directory.
-- **Lazy Loading**: Client components are lazily loaded for better performance.
-- **404 Handling**: Custom 404 pages for both frontend and API routes.
+- **File-Based Routing**: Automatically generate routes based on your directory structure in the `pages` and `api` folders.
+- **Express.js Integration**: Build robust backend APIs with Express.js without manual routing setup.
+- **React Frontend**: Use React for building dynamic and interactive user interfaces.
+- **Simplified Development**: No need to configure complex build tools; MareJS handles it for you.
+- **Hot Reloading**: Enjoy a smooth development experience with automatic reloading on file changes.
 
-## Motivation
+## Installation
 
-I loved the idea of combining React and Express in one project, using **file-based routing** for both client-side and server-side components. This approach offers a cleaner and more organized structure, similar to the ease of use provided by Next.js but with the flexibility of handling both frontend and backend in a unified project.
+Create a new MareJS project using the following command:
 
-## Technologies Used
+```bash
+npx emadomar/mare-js 
+```
 
-- **React (with Vite)**: Fast frontend development using Vite's dev server and bundling capabilities.
-- **React Router**: File-based routing for dynamic component loading on the client side.
-- **Express**: Backend server with file-based routing to automatically handle API routes.
-- **ES Modules**: Fully modern ES module setup for both React and Express.
-- **Node.js**: Server-side environment for Express APIs.
+This command will set up a new MareJS project in a folder named my-app.
+
+## Getting Started
+
+After installation, navigate to your project directory and install dependencies:
+
+```bash
+cd my-app
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Your application will be running at [http://localhost:4000](http://localhost:4000).
 
 ## Project Structure
 
+MareJS projects have a simple and intuitive structure:
 
-### Client-Side Routing
+src/
+├── pages/
+│   ├── index.jsx
+│   ├── about.jsx
+│   └── user/
+│       └── [id].jsx
+├── api/
+│   ├── index.js
+│   ├── user/
+│   │   └── [id].js
+│   └── default.js
+├── public/
+│   └── assets/
+├── .marejs/
+│   └── (hidden framework files)
+└── package.json
+```
 
-React components are placed inside the `/pages` directory, and React Router dynamically registers routes based on the file structure:
+- `pages/`: Contains React components that correspond to frontend routes. The routing is based on the file structure.
+- `api/`: Contains backend API endpoints. Each file represents an API route.
+- `public/`: Contains static assets like images and stylesheets.
+- `.marejs/`: Contains framework-specific files (hidden from the developer; you don't need to modify these).
 
-- `/src/pages/index.jsx` → `/`
-- `/src/pages/about.jsx` → `/about`
-- `/src/pages/user/index.jsx` → `/user`
+## Creating Pages
 
-### Server-Side Routing
+To create a new page, simply add a new `.jsx` file to the `pages` folder.
 
-Express API routes are placed inside the `/api` directory, and the server dynamically maps these routes based on the file structure:
+### Example: Creating an About Page
 
-- `/server/api/hello.js` → `/api/hello`
-- `/server/api/user/index.js` → `/api/user`
+Create the file `pages/about.jsx`:
 
-## Setup
+```jsx
+import React from 'react';
 
-### Prerequisites
+export default function About() {
+  return <h1>About Us</h1>;
+}
+```
 
-Make sure you have the following installed:
+This page will be accessible at [http://localhost:4000/about](http://localhost:4000/about).
 
-- **Node.js** (v14+)
-- **pnpm** (for managing packages)
+## Dynamic Routes
 
-### Getting Started
+You can create dynamic routes using square brackets `[]` in the filename.
 
-npx github:emadklenka/marejs
+### Example: User Profile Page
 
+Filename: `pages/user/[id].jsx`
 
+```jsx
+import React from 'react';
 
+export default function UserProfile({ id }) {
+  return <h1>User Profile for User ID: {id}</h1>;
+}
+```
 
+This route will match URLs like [http://localhost:4000/user/123](http://localhost:4000/user/123), where `123` is the dynamic `id` parameter.
 
+## Creating API Endpoints
 
+To create backend API routes, add JavaScript files to the `api` folder.
+
+### Example: User API Endpoint
+
+Filename: `api/user/[id].js`
+
+```javascript
+export default async function handler(req, res) {
+  const { id } = req.params;
+  // Fetch user data based on ID
+  const userData = await getUserData(id);
+  res.json(userData);
+}
+
+async function getUserData(id) {
+  // Mock data for demonstration
+  return { id, name: `User ${id}` };
+}
+```
+
+This API can be accessed via `GET http://localhost:4000/api/user/123`.
+
+## Using Layouts
+
+You can create shared layouts by adding a `layout.jsx` file in your `pages` directory or subdirectories.
+
+### Example: Creating a Main Layout
+
+Create the file `pages/layout.jsx`:
+
+```jsx
+import React from 'react';
+
+export default function Layout({ children }) {
+  return (
+    <>
+      <header>
+        <h1>My App</h1>
+      </header>
+      <main>{children}</main>
+      <footer>© 2023 My App</footer>
+    </>
+  );
+}
+```
+
+All pages within the `pages` directory will automatically use this layout.
+
+## Static Assets
+
+Place your static files (images, CSS, etc.) in the `public` folder. They can be accessed directly from your application.
+
+### Example: Using an Image
+
+If you have an image at `public/assets/logo.png`, you can use it in your components like this:
+
+```jsx
+<img src="/assets/logo.png" alt="Logo" />
+```
+
+## Deployment
+
+To build your application for production, run:
+
+```bash
+npm run build
+```
+
+Then start the production server:
+
+```bash
+npm start
+```
+
+Your application will be running at [http://localhost:4000](http://localhost:4000).
+
+## Additional Notes
+
+- **Hidden Framework Files**: The core functionality of MareJS is contained within the hidden `.marejs` folder. You don't need to interact with these files directly.
+- **Custom Middleware and Settings**: Advanced configurations can be added in the `api` folder, but for most use cases, simply adding pages and API endpoints is sufficient.
+- **Environment Variables**: You can use a `.env` file to manage environment-specific settings.
+
+## Conclusion
+
+MareJS aims to simplify the web development process by eliminating boilerplate code and configuration. By leveraging file-based routing and integrating Express.js and React, you can quickly build full-stack applications with minimal setup.
+
+## License
+
+MareJS is open-source software licensed under the MIT License.
+
+Happy coding with MareJS!
