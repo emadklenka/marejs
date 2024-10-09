@@ -4,7 +4,7 @@ import { useMatch } from "react-router-dom";
 import App from "../src/_app"; // Import the Layout component
 
 // Use Vite's `import.meta.glob` to dynamically load all .jsx files from the /pages directory
- const pages = import.meta.glob("../src/pages/**/*.jsx");
+const pages = import.meta.glob("../src/pages/**/*.jsx");
 const layouts = import.meta.glob("../src/pages/**/layout.jsx");
 
 // Function to find all layout files in the parent directories
@@ -17,7 +17,7 @@ const findAllLayouts = (filePath) => {
     parts.pop();
 
     // Adjust to ensure paths match the structure returned by `import.meta.glob`
-     
+
     const layoutPath = `${parts.join("/")}/layout.jsx`;
 
     if (layouts[layoutPath]) {
@@ -28,11 +28,9 @@ const findAllLayouts = (filePath) => {
   return layoutComponents;
 };
 
-
 // Create a lazy-loaded component map for all the pages
 const routes = Object.keys(pages).map((filePath) => {
-  let routePath = normalizePath(filePath);  
- 
+  let routePath = normalizePath(filePath);
 
   routePath = routePath.replace(/\[(\w+)\]/g, ":$1"); // Handle dynamic routes
   routePath = routePath === "" ? "/" : routePath.replace(/\/$/, ""); // Normalize root path
@@ -68,7 +66,6 @@ const ComponentWrapper = ({ Component, Layouts, path }) => {
 
 // Function to create nested routes with layouts
 const createRoutes = (routes) => {
- 
   return routes.map(({ path, component: Component, layouts: Layouts }) => (
     <Route key={path} path={path} element={<ComponentWrapper Component={Component} Layouts={Layouts} path={path} />}>
       {routes
@@ -89,7 +86,7 @@ export default function Mare() {
   return (
     <Router>
       <App>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>Loading....</div>}>
           <Routes>
             <Route path="/" element={<div />} /> {/* Empty layout content for root */}
             {createRoutes(routes)}
@@ -107,7 +104,7 @@ const NotFound = () => {
 };
 //////////////
 // Function to normalize the route path, handling folder names with `()` by excluding them from the path
-function normalizePath  (filePath)   {
+function normalizePath(filePath) {
   let routePath = filePath
     .replace("../src/pages", "")
     .replace("./pages", "")
@@ -123,4 +120,4 @@ function normalizePath  (filePath)   {
 
   routePath = routePath === "" ? "/" : routePath.replace(/\/$/, ""); // Normalize root path
   return routePath.toLowerCase();
-};
+}
