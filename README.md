@@ -18,7 +18,7 @@ MareJS is a full-stack JavaScript framework that simplifies web development by c
 Create a new MareJS project using the following command:
 
 ```bash
-npx emadomar/mare-js 
+npx github:/emadklenka/marejs
 ```
 
 This command will set up a new MareJS project in a folder named my-app.
