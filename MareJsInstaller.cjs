@@ -29,7 +29,8 @@ rl.question('Enter your project name: ', (projectName) => {
 
     // Clone the repo into the new folder
     try {
-        execSync(`git clone https://github.com/emadklenka/marejs.git ${projectPath}`, { stdio: 'inherit' });
+       // execSync(`git clone https://github.com/emadklenka/marejs.git ${projectPath}`, { stdio: 'inherit' });
+        execSync(`git clone https://github.com/emadklenka/marejs.git "${projectPath}"`, { stdio: 'inherit' });
 
         console.log('Repository cloned successfully.');
 
