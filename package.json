@@ -12,7 +12,7 @@
     "client": "vite",
     "build:client": "vite build",
     "build:server": "echo 'No server build step'",
-    "build": "npm run build:client && npm run build:server",
+    "build": " npm run build:server&&npm run build:client",
     "start": "node .mareJS/mare_server.js"
   },
   "dependencies": {

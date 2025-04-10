@@ -1,17 +1,48 @@
 
-![MareJS](https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d)
+<div align="center">
+  <img src="https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d" width="600">
+
+  <div>
+    <img src="https://img.shields.io/badge/React-18.2.0-blue?logo=react" alt="React">
+    <img src="https://img.shields.io/badge/Express-4.18.2-green?logo=express" alt="Express">
+    <img src="https://img.shields.io/badge/Vite-4.4.0-yellow?logo=vite" alt="Vite">
+  </div>
+</div>
 
 # MareJS
 
 MareJS is a full-stack JavaScript framework that simplifies web development by combining Express.js for backend APIs and React for frontend rendering. It utilizes file-based routing for both client-side and server-side, allowing developers to focus on building features rather than configuring routes.
 
-## Features
+## ✨ Features
 
-- **File-Based Routing**: Automatically generate routes based on your directory structure in the `pages` and `api` folders.
-- **Express.js Integration**: Build robust backend APIs with Express.js without manual routing setup.
-- **React Frontend**: Use React for building dynamic and interactive user interfaces.
-- **Simplified Development**: No need to configure complex build tools; MareJS handles it for you.
-- **Hot Reloading**: Enjoy a smooth development experience with automatic reloading on file changes.
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0;">
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #61dafb;">
+**🚀 File-Based Routing**
+Automatically generate routes based on your directory structure
+</div>
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #68a063;">
+**🔌 Express.js Integration**
+Build robust backend APIs with Express.js
+</div>
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #61dafb;">
+**⚛️ React Frontend**
+Build dynamic UIs with React
+</div>
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #fcc72e;">
+**⚡ Vite Powered**
+Blazing fast development experience
+</div>
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #ff6b6b;">
+**🔥 Hot Reloading**
+Instant feedback during development
+</div>
+
+</div>
 
 ## Installation
 
@@ -78,6 +109,82 @@ MareJS provides Next.js-like file-based routing while using React Router under t
 - `api/`: Backend API endpoints (file-based routing)
 - `public/`: Static assets like images and stylesheets
 - `.marejs/`: Framework-specific files (don't modify directly)
+
+## 🛠️ API Development & Middleware
+
+MareJS provides a powerful API system with built-in middleware support:
+
+### Core Middleware Files
+
+1. **`middleware.js`** - Main application middleware
+2. **`session.js`** - Session management
+3. **`server_startup.js`** - Server initialization
+4. **`cors.js`** - CORS configuration
+
+### Creating Custom Middleware
+
+```javascript
+// api/__mare_serversettings/custom-middleware.js
+export default function customMiddleware(req, res, next) {
+  // Your middleware logic
+  next();
+}
+```
+
+Register it in `mare_server.js`:
+```javascript
+import customMiddleware from './api/__mare_serversettings/custom-middleware.js';
+app.use(customMiddleware);
+```
+
+### Server Startup
+
+The `server_startup.js` runs before server starts:
+```javascript
+export async function Server_Startup() {
+  try {
+    // Initialize databases, caches, etc.
+    return true;
+  } catch (error) {
+    console.error('Startup failed:', error);
+    return false;
+  }
+}
+```
+
+### Advanced API Endpoints
+
+1. **Middleware Chain**:
+```javascript
+export default async function handler(req, res) {
+  // First middleware
+  if (!validateRequest(req)) {
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+
+  // Second middleware
+  const user = await authenticate(req);
+  if (!user) {
+    return res.status(401).end();
+  }
+
+  // Main handler
+  res.json({ data: await getData(user) });
+}
+```
+
+2. **Error Handling**:
+```javascript
+export default async function handler(req, res) {
+  try {
+    const data = await riskyOperation();
+    res.json(data);
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+```
 
 ## Creating Pages
 
