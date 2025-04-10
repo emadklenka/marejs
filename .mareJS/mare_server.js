@@ -8,6 +8,11 @@ import { pathToFileURL } from "url";
 // import { getMareSession } from '../api/__mare_serversettings/session';
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
+
+import { Server_Startup } from "../api/__mare_serversettings/server_startup.js";
+
+import dotenv from 'dotenv';
+dotenv.config();
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,8 +30,8 @@ if (mcors) {
   app.use(mcors);
 }
 //////////
-import { mareMiddleWear } from "../api/__mare_serversettings/middlewear.js";
-app.use(mareMiddleWear);
+import { mareMiddleWare } from "../api/__mare_serversettings/middleware.js";
+app.use(mareMiddleWare);
 
 // Helper function to dynamically import route
 const dynamicImport = async (routePath) => { 
@@ -221,15 +226,19 @@ const findAvailablePort = async (startingPort) => {
     }
   }
 
-  return port;
+  return port; 
 };
+
+ 
 
 (async () => {
   const startingPort = process.env.PORT || 4000;
   const PORT = await findAvailablePort(startingPort);
-
+  //AWAIT SERVER STARTUP
+  const ready =await Server_Startup();
+  if (! ready) { console.error("SERVER FAILED TO START BECAUSE OF STARTUP SCRIPT ERROR");  return;}
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`); 
   });
 })();
 //////////////////////////////////////////////////////////////////
