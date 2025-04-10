@@ -62,28 +62,59 @@ src/
 └── package.json
 ```
 
-- `pages/`: Contains React components that correspond to frontend routes. The routing is based on the file structure.
-- `api/`: Contains backend API endpoints. Each file represents an API route.
-- `public/`: Contains static assets like images and stylesheets.
-- `.marejs/`: Contains framework-specific files (hidden from the developer; you don't need to modify these).
+## Routing System
+
+MareJS provides Next.js-like file-based routing while using React Router under the hood. The routing system offers:
+
+- **Automatic Route Generation**: Files in `pages/` automatically become routes
+- **Layout Support**: Shared layouts via `_app.jsx` and `_MainLayout.jsx`
+- **Nested Routes**: Folders create nested URL paths
+- **Dynamic Segments**: Files named `[param].jsx` create dynamic routes
+
+### Key Routing Files:
+- `pages/`: React components that become routes (file-based routing)
+- `_app.jsx`: Root application layout component
+- `_MainLayout.jsx`: Main navigation layout component
+- `api/`: Backend API endpoints (file-based routing)
+- `public/`: Static assets like images and stylesheets
+- `.marejs/`: Framework-specific files (don't modify directly)
 
 ## Creating Pages
 
-To create a new page, simply add a new `.jsx` file to the `pages` folder.
+Pages are created by adding `.jsx` files to the `pages` directory. The file path determines the route URL.
 
-### Example: Creating an About Page
-
-Create the file `pages/about.jsx`:
+### Basic Page Example:
 
 ```jsx
-import React from 'react';
-
+// pages/about.jsx
 export default function About() {
   return <h1>About Us</h1>;
 }
 ```
 
-This page will be accessible at [http://localhost:4000/about](http://localhost:4000/about).
+Accessible at: `/about`
+
+### Dynamic Route Example:
+
+```jsx
+// pages/user/[id].jsx
+export default function UserPage({ id }) {
+  return <h1>User Profile: {id}</h1>;
+}
+```
+
+Accessible at: `/user/123` (id = "123")
+
+### Nested Route Example:
+
+```jsx
+// pages/blog/[slug]/page.jsx
+export default function BlogPost({ slug }) {
+  return <h1>Blog Post: {slug}</h1>;
+}
+```
+
+Accessible at: `/blog/my-post`
 
 ## Dynamic Routes
 
@@ -127,31 +158,40 @@ async function getUserData(id) {
 
 This API can be accessed via `GET http://localhost:4000/api/user/123`.
 
-## Using Layouts
+## Layout System
 
-You can create shared layouts by adding a `layout.jsx` file in your `pages` directory or subdirectories.
+MareJS uses a hierarchical layout system similar to Next.js:
 
-### Example: Creating a Main Layout
+1. `_app.jsx` - The root application component that wraps all pages
+2. `_MainLayout.jsx` - The main navigation layout component
+3. Page-specific layouts - Can be added in route folders
 
-Create the file `pages/layout.jsx`:
+### Example Layout Structure:
 
 ```jsx
-import React from 'react';
+// _app.jsx - Root layout
+import MainLayout from './_MainLayout';
 
-export default function Layout({ children }) {
+export default function App() {
+  return (
+    <MainLayout>
+      {/* Page content goes here */}
+    </MainLayout>
+  );
+}
+
+// _MainLayout.jsx - Main navigation
+export default function MainLayout({ children }) {
   return (
     <>
-      <header>
-        <h1>My App</h1>
-      </header>
+      <nav>{/* Navigation links */}</nav>
       <main>{children}</main>
-      <footer>© 2023 My App</footer>
     </>
   );
 }
 ```
 
-All pages within the `pages` directory will automatically use this layout.
+Layouts are automatically applied based on the file structure.
 
 ## Static Assets
 

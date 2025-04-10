@@ -1,20 +1,18 @@
- 
-export async function  Server_Startup() {
- try{
-//put ur app mandatory startup here
- 
-//console.log("SQL CONNECTION SUCCESS")
- 
- 
-  
-return true;    
- 
-
- }catch(e){
-
-console.log(`API SERVER FAILED TO STARTUP.....due to someting wrong in Server_Startup.js`)
-return false;
-
+ /**
+  * Server startup initialization function
+  * Place your application's mandatory startup logic here
+  * @returns {Promise<boolean>} True if startup succeeds, false if it fails
+  */
+ export async function Server_Startup() {
+   try {
+     // Add your server initialization logic here
+     // Example: database connections, cache warmup, etc.
+     
+     return true;
+   } catch (error) {
+     console.error('API server failed to initialize:', error);
+     return false;
+   }
  }
 return true;
 }
