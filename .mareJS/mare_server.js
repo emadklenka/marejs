@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
-const isDev =false ;// process.env.NODE_ENV === "development";
+const isDev = process.env.NODE_ENV === "development";
 
 // Middleware to handle sessions (if required)
 const msession = getMareSession();
@@ -30,8 +30,8 @@ if (mcors) {
   app.use(mcors);
 }
 //////////
-import { mareMiddleWare } from "../api/__mare_serversettings/middleware.js";
-app.use(mareMiddleWare);
+import{mareMiddleware} from "../api/__mare_serversettings/middleware.js";
+app.use(mareMiddleware);
 
 // Helper function to dynamically import route
 const dynamicImport = async (routePath) => { 
