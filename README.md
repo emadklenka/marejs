@@ -1,4 +1,3 @@
-
 <div align="center">
   <img src="https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d" width="600">
 
@@ -40,6 +39,11 @@ Blazing fast development experience
 <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #ff6b6b;">
 **🔥 Hot Reloading**
 Instant feedback during development
+</div>
+
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #9c88ff;">
+**🔌 WebSocket Support**
+Real-time communication with file-based WebSocket routing
 </div>
 
 </div>
@@ -343,3 +347,105 @@ MareJS aims to simplify the web development process by eliminating boilerplate c
 MareJS is open-source software licensed under the MIT License.
 
 Happy coding with MareJS!
+
+## 🔌 WebSocket Support
+
+MareJS includes built-in WebSocket support with file-based routing similar to API endpoints. WebSocket handlers are placed in the `api/wss/` directory.
+
+### Creating WebSocket Handlers
+
+Create WebSocket handlers by adding JavaScript files to the `api/wss/` folder:
+
+```javascript
+// api/wss/chat.js
+export default function chatHandler(ws, req) {
+  console.log('🔌 Chat client connected');
+  
+  // Send welcome message
+  ws.send(JSON.stringify({
+    type: 'welcome',
+    message: 'Welcome to the chat!'
+  }));
+
+  // Handle incoming messages
+  ws.on('message', (data) => {
+    const message = JSON.parse(data.toString());
+    console.log('📨 Received:', message);
+    
+    // Broadcast to all clients (implement your logic)
+    ws.send(JSON.stringify({
+      type: 'message',
+      user: message.user,
+      text: message.text,
+      timestamp: new Date().toISOString()
+    }));
+  });
+
+  // Handle disconnection
+  ws.on('close', () => {
+    console.log('🔌 Chat client disconnected');
+  });
+}
+```
+
+### Client-Side WebSocket Usage
+
+Connect to WebSocket endpoints from your React components:
+
+```jsx
+// pages/chat.jsx
+import { useState, useEffect } from 'react';
+
+export default function Chat() {
+  const [ws, setWs] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+
+  useEffect(() => {
+    const websocket = new WebSocket('ws://localhost:4000/api/wss/chat');
+    
+    websocket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setMessages(prev => [...prev, data]);
+    };
+
+    setWs(websocket);
+
+    return () => websocket.close();
+  }, []);
+
+  const sendMessage = () => {
+    if (ws && input.trim()) {
+      ws.send(JSON.stringify({
+        user: 'User',
+        text: input
+      }));
+      setInput('');
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        {messages.map((msg, i) => (
+          <div key={i}>{msg.user}: {msg.text}</div>
+        ))}
+      </div>
+      <input 
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+      />
+      <button onClick={sendMessage}>Send</button>
+    </div>
+  );
+}
+```
+
+### WebSocket Routing
+
+WebSocket endpoints follow the same file-based routing as API endpoints:
+
+- `api/wss/chat.js` → `ws://localhost:4000/api/wss/chat`
+- `api/wss/notifications.js` → `ws://localhost:4000/api/wss/notifications`
+- `api/wss/game/[room].js` → `ws://localhost:4000/api/wss/game/room123`
