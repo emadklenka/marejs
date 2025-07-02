@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+ 
+
+.main-nav {
+  @apply bg-gray-900 text-white px-6 py-4 shadow-md;
+
+  .nav-list {
+    @apply flex gap-6 list-none m-0 p-0;
+
+    li {
+      @apply text-sm font-medium;
+
+      a {
+        @apply text-white hover:text-purple-400 transition duration-200;
+      }
+    }
+  }
+}
+
+.content-area {
+  @apply px-6 py-8;
+}
