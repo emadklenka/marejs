@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+ 
+
+.main-nav {
+  @apply bg-gray-900 text-white px-6 py-4 shadow-lg rounded-b-xl;
+
+  .nav-list {
+    @apply flex gap-6 list-none m-0 p-0;
+
+    li {
+      @apply text-base font-semibold relative;
+
+      a {
+        @apply text-white px-3 py-1 rounded transition duration-200;
+        @apply hover:bg-indigo-500 hover:text-white focus:bg-indigo-600 focus:outline-none;
+        box-shadow: 0 2px 8px 0 rgba(80, 80, 160, 0.04);
+      }
+    }
+  }
+}
+
+.content-area {
+  @apply px-6 py-8 max-w-3xl mx-auto mt-8 bg-white rounded-2xl shadow-lg;
+}
