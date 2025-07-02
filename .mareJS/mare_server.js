@@ -106,7 +106,7 @@ app.use("/api", async (req, res, next) => {
   }
 });
 
-// ==== Dev/Prod static File Handling ====
+// ==== Dev/Prod File Handling ====
 if (isDev) {
   console.log("----- Development Mode Server ----------------");
   const { createServer: createViteServer } = await import("vite");
@@ -137,7 +137,7 @@ if (isDev) {
     }
   });
 }
-////////////////////////////////////////////
+
 // ==== Port Handling ====
 const checkPortAvailable = (port) =>
   new Promise((resolve, reject) => {
@@ -169,62 +169,36 @@ async function loadWSHandler(routeName) {
   const mod = await import(pathToFileURL(file).href);
   return mod.default;
 }
-
+ 
 async function setupWSSRouting(server) {
   const wss = new WebSocketServer({ noServer: true });
 
-  server.on('upgrade', async (req, socket, head) => {
-    try {
-      const url = new URL(req.url, 'http://localhost');
-      console.log('[WS-UPGRADE] Request to:', url.pathname);
-      
-      let route;
-      
-      // Handle both /api/wss/route and /route patterns
-      if (url.pathname.startsWith('/api/wss/')) {
-        route = url.pathname.replace('/api/wss/', '').replace(/\/+$/, '');
-      } else if (url.pathname.startsWith('/')) {
-        route = url.pathname.replace('/', '').replace(/\/+$/, '');
-      } else {
-        console.warn(`❌ Invalid WebSocket path: ${url.pathname}`);
-        socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
-        socket.destroy();
-        return;
-      }
+ server.on('upgrade', async (req, socket, head) => {
+  const fullUrl = new URL(`http://localhost${req.url}`); // ✅ Properly parse pathname + query
 
-      console.log(`[WSS] Incoming route: ${route}`);
+  if (!fullUrl.pathname.startsWith('/api/wss/')) return socket.destroy();
 
-      if (!wshandlers[route]) {
-        const handler = await loadWSHandler(route);
-        if (!handler) {
-          console.warn(`❌ No WS handler for ${route}`);
-          socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
-          socket.destroy();
-          return;
-        }
-        wshandlers[route] = handler;
-      }
+  const route = fullUrl.pathname.replace('/api/wss/', '').replace(/\/+$/, '');
+  const queryParams = Object.fromEntries(fullUrl.searchParams.entries());
 
-      wss.handleUpgrade(req, socket, head, (ws) => {
-        console.log(`[WSS] Connected: ${route}`);
-        try {
-          wshandlers[route](ws, req);
-        } catch (error) {
-          console.error(`❌ Error in WS handler for ${route}:`, error);
-          ws.close(1011, 'Internal server error');
-        }
-      });
-    } catch (error) {
-      console.error('❌ WebSocket upgrade error:', error);
-      socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
-      socket.destroy();
+  console.log('[WSS] Incoming route:', route);
+
+
+  if (!wshandlers[route]) {
+    const handler = await loadWSHandler(route);
+    if (!handler) {
+      console.warn(`❌ No WS handler for ${route}`);
+      return socket.destroy();
     }
-  });
+    wshandlers[route] = handler;
+  }
 
-  // Handle WebSocket server errors
-  wss.on('error', (error) => {
-    console.error('❌ WebSocket Server error:', error);
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    req.query = queryParams; // ✅ Attach parsed query params to req
+    wshandlers[route](ws, req);
   });
+});
+
 }
 
 // ==== Startup ====
@@ -243,6 +217,5 @@ async function setupWSSRouting(server) {
 
   server.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket available at ws://localhost:${PORT}/api/wss/`);
   });
 })();
