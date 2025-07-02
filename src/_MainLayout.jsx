@@ -1,5 +1,5 @@
 import { Outlet, Link } from "react-router-dom";
-
+import '../styles/global.scss'; // Import global styles
 /**
  * Main layout component containing navigation and content area
  * @returns {JSX.Element} The application layout structure
