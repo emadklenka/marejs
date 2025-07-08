@@ -1,25 +1,72 @@
 @import "tailwindcss";
-
- 
-
-.main-nav {
-  @apply bg-gray-900 text-white px-6 py-4 shadow-lg rounded-b-xl;
-
-  .nav-list {
-    @apply flex gap-6 list-none m-0 p-0;
-
-    li {
-      @apply text-base font-semibold relative;
-
-      a {
-        @apply text-white px-3 py-1 rounded transition duration-200;
-        @apply hover:bg-indigo-500 hover:text-white focus:bg-indigo-600 focus:outline-none;
-        box-shadow: 0 2px 8px 0 rgba(80, 80, 160, 0.04);
-      }
-    }
-  }
+@plugin "daisyui";
+@plugin "daisyui" {
+  themes: all;
 }
 
-.content-area {
-  @apply px-6 py-8 max-w-3xl mx-auto mt-8 bg-white rounded-2xl shadow-lg;
+/* Your custom theme */
+@plugin "daisyui/theme" {
+  name: "mytheme";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  /* Modern, sophisticated base colors */
+  --color-base-100: oklch(99% 0.005 240);     /* Pure white with subtle cool tint */
+  --color-base-200: oklch(96% 0.01 240);      /* Light gray with cool undertone */
+  --color-base-300: oklch(91% 0.02 240);      /* Medium-light gray */
+  --color-base-content: oklch(25% 0.02 240);  /* Dark charcoal for text */
+
+  /* Vibrant, modern primary (Electric Blue) */
+  --color-primary: oklch(65% 0.25 250);       /* Bright electric blue */
+  --color-primary-content: oklch(98% 0.01 250);
+
+  /* Elegant secondary (Purple) */
+  --color-secondary: oklch(70% 0.22 290);     /* Rich purple */
+  --color-secondary-content: oklch(98% 0.01 290);
+
+  /* Fresh accent (Emerald Green) */
+  --color-accent: oklch(75% 0.20 150);        /* Vibrant emerald */
+  --color-accent-content: oklch(98% 0.01 150);
+
+  /* Sophisticated neutral (Warm Gray) */
+  --color-neutral: oklch(45% 0.03 20);        /* Warm dark gray */
+  --color-neutral-content: oklch(98% 0.01 20);
+
+  /* Status colors with better contrast */
+  --color-info: oklch(70% 0.18 220);          /* Bright cyan-blue */
+  --color-info-content: oklch(98% 0.01 220);
+
+  --color-success: oklch(72% 0.25 145);       /* Fresh green */
+  --color-success-content: oklch(98% 0.01 145);
+
+  --color-warning: oklch(78% 0.22 65);        /* Warm amber */
+  --color-warning-content: oklch(20% 0.02 65);
+
+  --color-error: oklch(68% 0.25 15);          /* Coral red */
+  --color-error-content: oklch(98% 0.01 15);
+
+  /* Modern border radius */
+  --radius-selector: 0.75rem;    /* Slightly rounded */
+  --radius-field: 0.5rem;        /* Medium rounded */
+  --radius-box: 0.875rem;        /* More rounded for cards */
+
+  /* Refined spacing */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  /* Subtle border */
+  --border: 1px;
+
+  /* Enhanced visual effects */
+  --depth: 2;        /* More shadow depth */
+  --noise: 0.1;      /* Subtle texture */
+}
+
+body {
+  @apply leading-relaxed;
+}
+
+a {
+  @apply text-blue-500 underline hover:text-blue-700;
 }

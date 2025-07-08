@@ -18,14 +18,17 @@
     "start": "node .mareJS/mare_server.js"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.11",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "daisyui": "^5.0.46",
     "dotenv": "^16.4.7",
     "express": "^4.21.0",
     "express-session": "^1.18.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
+    "theme-change": "^2.5.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
