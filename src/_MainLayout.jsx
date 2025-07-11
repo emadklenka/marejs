@@ -1,13 +1,8 @@
-import { Link } from "react-router-dom";
+ 
 import { useEffect } from "react";
-import { themeChange } from "theme-change";
-import "../styles/global.css";
+import { Link } from "react-router-dom";
 
 export default function MainLayout({ children }) {
-  useEffect(() => {
-    themeChange(false); // required for React
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
       {/* Navbar */}
@@ -22,14 +17,8 @@ export default function MainLayout({ children }) {
             <li><Link to="/news" className="link">News</Link></li>
             <li><Link to="/teams" className="link">Teams</Link></li>
 
-            {/* Theme Toggle */}
-            <li>
-              <label className="swap swap-rotate btn btn-ghost text-xl">
-                <input type="checkbox" className="theme-controller" value="dark" />
-                <div className="swap-off">🌙</div>
-                <div className="swap-on">☀️</div>
-              </label>
-            </li>
+            {/* ✅ Use ThemeToggle component here */}
+            <li><ThemeToggle /></li>
           </ul>
         </div>
       </nav>
@@ -39,5 +28,30 @@ export default function MainLayout({ children }) {
         {children}
       </main>
     </div>
+  );
+}
+
+function ThemeToggle() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const toggle = document.querySelector("#theme-toggle input");
+
+    const storedTheme = localStorage.getItem("theme") || "light";
+    root.setAttribute("data-theme", storedTheme);
+    if (toggle) toggle.checked = storedTheme === "dark";
+
+    toggle?.addEventListener("change", () => {
+      const newTheme = toggle.checked ? "dark" : "light";
+      root.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+    });
+  }, []);
+
+  return (
+    <label id="theme-toggle" className="swap swap-rotate cursor-pointer">
+      <input type="checkbox" />
+      <div className="swap-on text-xl">🌞</div>
+      <div className="swap-off text-xl">🌙</div>
+    </label>
   );
 }
