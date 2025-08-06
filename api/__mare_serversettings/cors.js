@@ -1,9 +1,16 @@
 import cors from 'cors';
 export   function getMarecors()
-{   // you can return null or valid cors object or to be honest any middlewear
-    return null
+{   // Secure CORS: use environment variable for allowed origins
+    const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
     return cors({
-        origin: 'http://localhost:9999',  
-        credentials: true
-      })
+        origin: function(origin, callback) {
+            // Allow requests with no origin (like mobile apps, curl, etc.)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('Not allowed by CORS'));
+        },
+        credentials: process.env.CORS_CREDENTIALS === 'true'
+    });
 }

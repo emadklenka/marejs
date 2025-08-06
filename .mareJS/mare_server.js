@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
 import { Server_Startup } from "../api/__mare_serversettings/server_startup.js";
-import { mareMiddleware } from "../api/__mare_serversettings/middleware.js";
+import { mareMiddleware, mareRateLimiter } from "../api/__mare_serversettings/middleware.js";
 
 // ==== Setup ====
 dotenv.config();
@@ -19,6 +19,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
+
+// Global rate limiter
+app.use(mareRateLimiter);
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -44,8 +47,29 @@ const dynamicImport = async (routePath) => {
 
 app.use("/api", async (req, res, next) => {
   let routePath = path.join(__dirname, req.path);
-  if (req.path.includes("..") || req.path.startsWith("./") || req.path.startsWith(".")) {
-    return res.status(400).send("Invalid API path");
+  
+  // Enhanced path traversal protection
+  const normalizedPath = path.normalize(req.path);
+  
+  // Check for path traversal attempts using multiple techniques
+  const hasTraversal = normalizedPath.includes('..') ||
+                      req.path.includes('..') ||
+                      req.path.includes('%2e%2e') ||
+                      req.path.includes('%2e.') ||
+                      req.path.includes('.%2e') ||
+                      normalizedPath.startsWith('/') === false ||
+                      path.isAbsolute(req.path);
+  
+  if (hasTraversal) {
+    return res.status(400).json({ error: "Invalid API path - path traversal detected" });
+  }
+  
+  // Additional validation to ensure path is within API directory
+  const resolvedPath = path.resolve(__dirname, normalizedPath);
+  const apiBasePath = path.resolve(__dirname, 'api');
+  
+  if (!resolvedPath.startsWith(apiBasePath)) {
+    return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
   }
 
   routePath = routePath.replace(".mareJS", "api");
