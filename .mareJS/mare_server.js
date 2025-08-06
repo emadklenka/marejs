@@ -56,17 +56,16 @@ app.use("/api", async (req, res, next) => {
                       req.path.includes('..') ||
                       req.path.includes('%2e%2e') ||
                       req.path.includes('%2e.') ||
-                      req.path.includes('.%2e') ||
-                      normalizedPath.startsWith('/') === false ||
-                      path.isAbsolute(req.path);
+                      req.path.includes('.%2e');
   
   if (hasTraversal) {
     return res.status(400).json({ error: "Invalid API path - path traversal detected" });
   }
   
   // Additional validation to ensure path is within API directory
-  const resolvedPath = path.resolve(__dirname, normalizedPath);
-  const apiBasePath = path.resolve(__dirname, 'api');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
+  const resolvedPath = path.resolve(__dirname, '..', 'api', cleanPath);
+  const apiBasePath = path.resolve(__dirname, '..', 'api');
   
   if (!resolvedPath.startsWith(apiBasePath)) {
     return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
