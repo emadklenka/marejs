@@ -25,14 +25,7 @@ app.use(mareRateLimiter);
 
 const isDev = process.env.NODE_ENV === "development";
 
-// ==== Middleware ====
-const msession = getMareSession();
-if (msession) app.use(msession);
-
-const mcors = getMarecors();
-if (mcors) app.use(mcors);
-
-app.use(mareMiddleware);
+ 
 
 // ==== API Routing ====
 const dynamicImport = async (routePath) => {
@@ -45,7 +38,12 @@ const dynamicImport = async (routePath) => {
   }
 };
 
-app.use("/api", async (req, res, next) => {
+app.use("/api",
+  mareRateLimiter,
+  getMareSession(),
+  getMarecors(),
+  mareMiddleware,
+  async (req, res, next) => {
   let routePath = path.join(__dirname, req.path);
   
   // Enhanced path traversal protection

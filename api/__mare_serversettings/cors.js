@@ -14,3 +14,8 @@ export   function getMarecors()
         credentials: process.env.CORS_CREDENTIALS === 'true'
     });
 }
+// ✅ Example .env
+ 
+
+// CORS_ORIGIN=https://example.com,https://another.com
+// CORS_CREDENTIALS=true
