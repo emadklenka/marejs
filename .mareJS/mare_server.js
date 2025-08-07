@@ -60,14 +60,14 @@ app.use("/api",
     return res.status(400).json({ error: "Invalid API path - path traversal detected" });
   }
   
-  // Additional validation to ensure path is within API directory
-  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-  const resolvedPath = path.resolve(__dirname, '..', 'api', cleanPath);
-  const apiBasePath = path.resolve(__dirname, '..', 'api');
-  
-  if (!resolvedPath.startsWith(apiBasePath)) {
-    return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
-  }
+const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
+const resolvedPath = path.resolve(__dirname, '..', 'api', cleanPath);
+const apiBasePath = path.resolve(__dirname, '..', 'api');
+
+// Make sure resolvedPath is inside apiBasePath
+if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute(path.relative(apiBasePath, resolvedPath))) {
+  return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
+}
 
   routePath = routePath.replace(".mareJS", "api");
   const indexFilePath = path.join(routePath, "index.js");
