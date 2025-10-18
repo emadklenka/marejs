@@ -1,21 +1,22 @@
 import cors from 'cors';
-export   function getMarecors()
-{   // Secure CORS: use environment variable for allowed origins
-    const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean);
-    return cors({
-        origin: function(origin, callback) {
-            // Allow requests with no origin (like mobile apps, curl, etc.)
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-            return callback(new Error('Not allowed by CORS'));
-        },
-        credentials: process.env.CORS_CREDENTIALS === 'true'
-    });
-}
-// ✅ Example .env
- 
 
-// CORS_ORIGIN=https://example.com,https://another.com
-// CORS_CREDENTIALS=true
+/**
+ * MareJS CORS Configuration
+ * 
+ * By default, allows all origins.
+ * To restrict access, uncomment and modify the code below.
+ */
+export function getMarecors() {
+    return cors({
+        origin: true, // Allow all origins
+        credentials: true
+    });
+    
+    /* 
+    // To restrict to specific origins, use this instead:
+    return cors({
+        origin: ['https://yourdomain.com', 'https://app.yourdomain.com'],
+        credentials: true
+    });
+    */
+}

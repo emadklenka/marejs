@@ -11,7 +11,8 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
 import { Server_Startup } from "../api/__mare_serversettings/server_startup.js";
-import { mareMiddleware, mareRateLimiter } from "../api/__mare_serversettings/middleware.js";
+//import { mareMiddleware, mareRateLimiter } from "../api/__mare_serversettings/middleware.js";
+import { mareMiddleware } from "../api/__mare_serversettings/middleware.js";
 
 // ==== Setup ====
 dotenv.config();
@@ -21,7 +22,7 @@ const app = express();
 app.use(express.json());
 
 // Global rate limiter
-app.use(mareRateLimiter);
+//app.use(mareRateLimiter);
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -39,7 +40,7 @@ const dynamicImport = async (routePath) => {
 };
 
 app.use("/api",
-  mareRateLimiter,
+ // mareRateLimiter,
   getMareSession(),
   getMarecors(),
   mareMiddleware,
@@ -127,26 +128,8 @@ if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute
   }
 });
 
-// ==== Dev/Prod File Handling ====
-if (isDev) {
-  console.log("----- Development Mode Server ----------------");
-  const { createServer: createViteServer } = await import("vite");
-
-  const vite = await createViteServer({ server: { middlewareMode: true } });
-  app.use(vite.middlewares);
-
-  app.get("*", async (req, res) => {
-    const url = req.originalUrl;
-    try {
-      const template = await vite.transformIndexHtml(url, "");
-      res.status(200).set({ "Content-Type": "text/html" }).end(template);
-    } catch (err) {
-      vite.ssrFixStacktrace(err);
-      console.error(err);
-      res.status(500).end(err.message);
-    }
-  });
-} else {
+// ==== Dev/Prod static File Handling ====
+ 
   const distPath = path.resolve(__dirname, "../dist");
   app.use(express.static(distPath));
   app.get("*", (req, res) => {
@@ -157,7 +140,7 @@ if (isDev) {
       res.status(404).send("index.html not found");
     }
   });
-}
+ 
 
 // ==== Port Handling ====
 const checkPortAvailable = (port) =>
