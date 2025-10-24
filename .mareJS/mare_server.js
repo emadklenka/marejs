@@ -88,30 +88,26 @@ app.use("/api",
   mareMiddleware,
   async (req, res, next) => {
   let routePath = path.join(__dirname, req.path);
-  
-  // Enhanced path traversal protection
-  const normalizedPath = path.normalize(req.path);
-  
-  // Check for path traversal attempts using multiple techniques
-  const hasTraversal =detectPathTraversal(normalizedPath)
-  //  normalizedPath.includes('..') ||
-  //                     req.path.includes('..') ||
-  //                     req.path.includes('%2e%2e') ||
-  //                     req.path.includes('%2e.') ||
-  //                     req.path.includes('.%2e');
-  
+
+  // Check for path traversal attempts using WAF detection
+  const hasTraversal = detectPathTraversal(req.path);
+
   if (hasTraversal) {
     return res.status(400).json({ error: "Invalid API path - path traversal detected" });
   }
-  
-const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-const resolvedPath = path.resolve(__dirname, '..', 'api', cleanPath);
-const apiBasePath = path.resolve(__dirname, '..', 'api');
 
-// Make sure resolvedPath is inside apiBasePath
-if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute(path.relative(apiBasePath, resolvedPath))) {
-  return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
-}
+  // Clean the URL path (remove leading slash) and convert to platform-specific path
+  const cleanPath = req.path.startsWith('/') ? req.path.substring(1) : req.path;
+  // Convert forward slashes from URL to platform-specific separators (backslash on Windows, forward slash on Unix)
+  const cleanPathPlatform = cleanPath.split('/').join(path.sep);
+  const resolvedPath = path.resolve(__dirname, '..', 'api', cleanPathPlatform);
+  const apiBasePath = path.resolve(__dirname, '..', 'api');
+
+  // Make sure resolvedPath is inside apiBasePath (cross-platform check)
+  const relativePath = path.relative(apiBasePath, resolvedPath);
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
+  }
 
   // Use path.sep for cross-platform compatibility (Windows uses backslash, Unix uses forward slash)
   routePath = routePath.split(path.sep).map(segment =>
