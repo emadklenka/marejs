@@ -1,0 +1,598 @@
+================================================================================
+                          MAREJS FRAMEWORK DOCUMENTATION
+                             Server-Side Guide v1.0
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. What is MareJS?
+2. Routing System
+3. API Route Files
+4. Dynamic Route Parameters
+5. Session & CORS
+6. Web Application Firewall (WAF)
+7. Environment Variables
+8. Server Startup Configuration
+9. Testing
+10. Framework Structure
+
+
+================================================================================
+1. WHAT IS MAREJS?
+================================================================================
+
+MareJS is a lightweight, file-based routing framework built on Express.js.
+It provides:
+
+  - Automatic API routing based on file structure
+  - Built-in Web Application Firewall (WAF)
+  - Session management
+  - CORS handling
+  - Dynamic route parameters
+  - WebSocket support
+  - Security-first design
+
+The framework follows a "convention over configuration" philosophy where your
+file structure defines your API routes automatically.
+
+
+================================================================================
+2. ROUTING SYSTEM
+================================================================================
+
+MareJS uses file-based routing. The structure of your /api folder determines
+your API endpoints automatically.
+
+BASIC CONCEPT:
+--------------
+  File Path                    →  API Endpoint
+  -------------------------        ---------------------------
+  api/hello.js                 →  /api/hello
+  api/users.js                 →  /api/users
+  api/products/list.js         →  /api/products/list
+  api/auth/login.js            →  /api/auth/login
+
+
+HOW IT WORKS:
+-------------
+When a request comes to /api/*, the framework:
+
+1. Takes the request path (e.g., /api/hello)
+2. Looks for matching files in the /api folder:
+   - First checks: api/hello/index.js
+   - Then checks: api/hello.js
+3. Dynamically imports and executes the route handler
+4. Returns the response
+
+
+PUBLIC vs PRIVATE ROUTES:
+-------------------------
+  /api/public/*     → Accessible without authentication
+  /api/*            → Requires authentication (configured in middleware.js)
+
+Example:
+  api/public/webhooks/github.js  → Anyone can access
+  api/users/profile.js           → Requires authentication
+
+
+================================================================================
+3. API ROUTE FILES
+================================================================================
+
+Route files export a default function that handles requests.
+
+BASIC STRUCTURE:
+----------------
+
+  // api/hello.js
+  export default (req, res) => {
+    res.json({ message: 'Hello World!' });
+  };
+
+
+USING INDEX FILES:
+------------------
+
+You can use index.js for folder-based routes:
+
+  // api/hello/index.js
+  export default (req, res) => {
+    res.json({ message: 'Hello from index!' });
+  };
+
+  This responds to: /api/hello
+
+
+BOTH PATTERNS WORK:
+-------------------
+
+Option 1: api/products.js          → /api/products
+Option 2: api/products/index.js    → /api/products
+
+Choose based on your preference. If you need sub-routes, use folders:
+
+  api/products/
+  ├── index.js         → /api/products
+  ├── list.js          → /api/products/list
+  └── details.js       → /api/products/details
+
+
+ACCESSING REQUEST DATA:
+-----------------------
+
+  export default (req, res) => {
+    const queryParams = req.query;      // GET: ?name=value
+    const bodyData = req.body;          // POST: JSON body
+    const routeParams = req.params;     // Dynamic: /api/user/:id
+    const session = req.session;        // Session data
+
+    res.json({ success: true });
+  };
+
+
+================================================================================
+4. DYNAMIC ROUTE PARAMETERS
+================================================================================
+
+Use [param] syntax in folder names for dynamic parameters.
+
+EXAMPLE:
+--------
+
+File structure:
+  api/
+  └── users/
+      └── [id]/
+          └── index.js
+
+Route handler:
+  // api/users/[id]/index.js
+  export default (req, res) => {
+    const userId = req.params.id;
+    res.json({ userId: userId });
+  };
+
+Request:
+  GET /api/users/123
+
+Response:
+  { "userId": "123" }
+
+
+MULTIPLE PARAMETERS:
+--------------------
+
+  api/posts/[postId]/comments/[commentId].js
+
+  Access via: req.params.postId and req.params.commentId
+
+
+================================================================================
+5. SESSION & CORS
+================================================================================
+
+SESSIONS:
+---------
+Configured in: api/__mare_serversettings/session.js
+
+Access session data in any route:
+  req.session.userId = 123;
+  const user = req.session.userId;
+
+
+CORS:
+-----
+Configured in: api/__mare_serversettings/cors.js
+
+Controls which domains can access your API.
+
+
+MIDDLEWARE:
+-----------
+Configured in: api/__mare_serversettings/middleware.js
+
+Handles authentication and authorization.
+Default behavior:
+  - Routes starting with /public → Allow without auth
+  - All other routes → Require authentication
+
+
+================================================================================
+6. WEB APPLICATION FIREWALL (WAF)
+================================================================================
+
+MareJS includes a built-in WAF that protects against:
+  - XSS (Cross-Site Scripting)
+  - SQL Injection
+  - Path Traversal
+
+The WAF runs BEFORE all other middleware and scans:
+  - Query parameters (GET requests)
+  - Request body (POST/PUT/PATCH)
+  - Route parameters
+  - Uploaded file names
+
+
+WAF MODES:
+----------
+
+The WAF can operate in different modes configured via environment variables:
+
+MODE 1: BLOCK (Default)
+  - Blocks malicious requests with 403 Forbidden
+  - Logs attack details to console
+
+  WAF_MODE=block
+
+
+MODE 2: LOG ONLY
+  - Logs attacks but allows requests through
+  - Useful for testing/debugging
+
+  WAF_MODE=log
+
+
+MODE 3: DISABLED
+  - WAF is completely off
+
+  WAF=false
+  or
+  WAF_MODE=off
+
+
+ENVIRONMENT VARIABLES:
+----------------------
+
+WAF=true                   Enable/disable WAF (default: true)
+WAF_MODE=block             block | log | off (default: block)
+WAF_SAFE_ROUTES=true       Enable safe routes config (default: true)
+WAF_STRICT=false           Ignore safe routes, check everything (default: false)
+
+
+DISABLING THE WAF:
+------------------
+
+Option 1 - Completely disable:
+  Create or edit .env file in root:
+
+  WAF=false
+
+Option 2 - Log only mode:
+
+  WAF_MODE=log
+
+Option 3 - Disable for specific routes:
+  Edit saferoutes.config.js (see Safe Routes section)
+
+
+SAFE ROUTES CONFIGURATION:
+--------------------------
+
+Location: saferoutes.config.js (in root folder)
+
+Allows bypassing WAF for specific routes (webhooks, code editors, etc.)
+
+Example:
+
+  export default {
+    // Completely bypass WAF for exact paths
+    exact: [
+      "/api/public/webhooks/github",
+      "/api/public/webhooks/stripe"
+    ],
+
+    // Pattern-based bypasses (wildcards)
+    patterns: [
+      "/api/public/webhooks/*"
+    ],
+
+    // Partial bypasses (disable specific checks only)
+    partial: [
+      {
+        path: "/api/blog/post",
+        methods: ["POST", "PUT"],
+        skip: ["xss"],
+        reason: "Blog posts contain legitimate HTML"
+      }
+    ]
+  };
+
+
+When a route is bypassed, you'll see in console:
+  [WAF BYPASSED] /api/public/webhooks/github (Exact match: /api/public/webhooks/github)
+
+
+DISABLE SAFE ROUTES:
+--------------------
+
+To ignore saferoutes.config.js entirely:
+
+  WAF_SAFE_ROUTES=false
+
+Or use strict mode (always check everything):
+
+  WAF_STRICT=true
+
+
+WAF ATTACK LOGS:
+----------------
+
+When WAF blocks an attack, you see in console:
+
+  [WAF BLOCKED] 2025-10-24 14:32:15 | IP: 127.0.0.1 | Path: /api/user | Attack: XSS | Param: query.name | Value: <script>alert(1)</script>
+
+Response to attacker:
+
+  HTTP 403 Forbidden
+  {
+    "error": "Forbidden",
+    "message": "Request blocked by Web Application Firewall",
+    "threats": [
+      { "type": "XSS", "parameter": "query.name" }
+    ]
+  }
+
+
+WAF DETECTION MODULES:
+----------------------
+
+The WAF is modular and organized in .mareJS/waf/:
+
+  pathtraversal.js  - Detects directory traversal (../, %2e%2e, etc.)
+  xss.js            - Detects XSS attacks (<script>, onerror=, javascript:, etc.)
+  sqli.js           - Detects SQL injection (context-aware, low false positives)
+  waf.js            - Main middleware that orchestrates all checks
+
+
+CONTEXT-AWARE SQL INJECTION DETECTION:
+---------------------------------------
+
+The SQL injection detector is smart and avoids false positives.
+
+Examples:
+
+  ALLOWED (Legitimate):
+    "I select the blue option"              ✓ Normal English
+    "Chris Anderson"                        ✓ Name with "and"
+    "Database Administrator with SELECT"    ✓ CV/Resume text
+    "someunion"                             ✓ Word containing "union"
+    "Where are you from"                    ✓ Question
+
+  BLOCKED (Attacks):
+    "' OR 1=1--"                            ✗ SQL injection
+    "' UNION SELECT * FROM users--"         ✗ SQL injection
+    "; DROP TABLE users"                    ✗ Stacked query
+    "1' AND SLEEP(5)--"                     ✗ Time-based blind
+
+The detector looks for SQL SYNTAX patterns and COMBINATIONS:
+  - Quotes + SQL keywords + operators
+  - SQL comments (--, /*, #)
+  - Logic bombs (OR 1=1)
+  - Stacked queries
+
+
+================================================================================
+7. ENVIRONMENT VARIABLES
+================================================================================
+
+Create a .env file in the root directory:
+
+SERVER CONFIGURATION:
+---------------------
+PORT=4000                    Server port (default: 4000)
+NODE_ENV=development         Environment (development | production)
+
+
+WAF CONFIGURATION:
+------------------
+WAF=true                     Enable/disable WAF
+WAF_MODE=block               block | log | off
+WAF_SAFE_ROUTES=true         Enable safe routes config
+WAF_STRICT=false             Ignore safe routes entirely
+
+
+CUSTOM SETTINGS:
+----------------
+Add your own environment variables and access via:
+  process.env.YOUR_VARIABLE
+
+
+================================================================================
+8. SERVER STARTUP CONFIGURATION
+================================================================================
+
+Location: api/__mare_serversettings/server_startup.js
+
+This file runs BEFORE the server starts. Use it for:
+  - Database connections
+  - Cache warmup
+  - Loading configurations
+  - Initialization tasks
+
+The startup function loads WAF safe routes automatically.
+
+Example:
+
+  export async function Server_Startup() {
+    try {
+      // Connect to database
+      await connectDatabase();
+
+      // Load cache
+      await warmupCache();
+
+      // Your initialization code here
+
+      return true;  // Success
+    } catch (error) {
+      console.error('Startup failed:', error);
+      return false;  // Failure (server won't start)
+    }
+  }
+
+
+If Server_Startup() returns false, the server will NOT start.
+
+
+================================================================================
+9. TESTING
+================================================================================
+
+MANUAL TESTING:
+---------------
+
+Test legitimate requests:
+  curl http://localhost:4000/api/public/publichello
+
+Test XSS attack:
+  curl "http://localhost:4000/api/public/publichello?xss=<script>alert(1)</script>"
+
+Test SQL injection:
+  curl "http://localhost:4000/api/public/publichello?id=' OR 1=1--"
+
+
+AUTOMATED TESTING:
+------------------
+
+Location: tests/waftest.js
+
+Run comprehensive WAF tests:
+  node tests/waftest.js
+
+Test against different server:
+  TEST_URL=http://localhost:3002 node tests/waftest.js
+
+The test suite includes:
+  - 10 legitimate request tests (should pass)
+  - 10 XSS attack tests (should block)
+  - 12 SQL injection tests (should block)
+  - 6 path traversal tests (should block)
+  - 2 combined attack tests (should block)
+
+Total: 40 tests
+
+
+================================================================================
+10. FRAMEWORK STRUCTURE
+================================================================================
+
+ROOT DIRECTORY:
+---------------
+
+  marejs/
+  ├── .env                          Environment variables
+  ├── package.json                  Node dependencies
+  ├── saferoutes.config.js          WAF safe routes (user editable)
+  │
+  ├── .mareJS/                      Framework internals (DON'T EDIT)
+  │   ├── mare_server.js            Main server file
+  │   └── waf/                      WAF modules
+  │       ├── waf.js                Main WAF middleware
+  │       ├── xss.js                XSS detection
+  │       ├── sqli.js               SQL injection detection
+  │       └── pathtraversal.js      Path traversal detection
+  │
+  ├── api/                          Your API routes (USER EDITABLE)
+  │   ├── __mare_serversettings/    Server configuration
+  │   │   ├── server_startup.js     Startup logic
+  │   │   ├── session.js            Session config
+  │   │   ├── cors.js               CORS config
+  │   │   └── middleware.js         Auth middleware
+  │   │
+  │   ├── public/                   Public routes (no auth)
+  │   │   └── publichello.js        Example public route
+  │   │
+  │   └── privatehello.js           Example private route
+  │
+  ├── tests/                        Test suite
+  │   └── waftest.js                WAF automated tests
+  │
+  └── docs/                         Documentation
+      └── serverside.txt            This file
+
+
+IMPORTANT DIRECTORIES:
+----------------------
+
+DO NOT EDIT:
+  .mareJS/                Framework core files
+
+USER EDITABLE:
+  api/                    Your API routes
+  saferoutes.config.js    WAF bypass configuration
+  .env                    Environment variables
+
+
+================================================================================
+QUICK START GUIDE
+================================================================================
+
+1. CREATE A NEW ROUTE:
+
+   Create: api/hello.js
+
+   export default (req, res) => {
+     res.json({ message: 'Hello!' });
+   };
+
+   Access: http://localhost:4000/api/hello
+
+
+2. CREATE A PUBLIC ROUTE:
+
+   Create: api/public/status.js
+
+   export default (req, res) => {
+     res.json({ status: 'OK' });
+   };
+
+   Access: http://localhost:4000/api/public/status (no auth required)
+
+
+3. USE DYNAMIC PARAMETERS:
+
+   Create: api/users/[id].js
+
+   export default (req, res) => {
+     res.json({ userId: req.params.id });
+   };
+
+   Access: http://localhost:4000/api/users/123
+
+
+4. CONFIGURE WAF:
+
+   Edit .env:
+
+   WAF=true
+   WAF_MODE=block
+
+
+5. TEST SECURITY:
+
+   Run: node tests/waftest.js
+
+
+================================================================================
+SUPPORT & RESOURCES
+================================================================================
+
+Framework Structure:
+  - Framework core: .mareJS/
+  - API routes: api/
+  - Configuration: .env, saferoutes.config.js
+
+Security:
+  - WAF protects against XSS, SQL injection, path traversal
+  - Configure via .env or saferoutes.config.js
+  - Test with: node tests/waftest.js
+
+Development:
+  - File-based routing (no config needed)
+  - Hot reload during development
+  - Session and CORS built-in
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

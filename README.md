@@ -1,16 +1,128 @@
 <div align="center">
   <img src="https://repository-images.githubusercontent.com/863301590/8529612f-d102-4a7d-9977-b722aa32ea6d" width="600">
 
+  <h1>🌊 MareJS</h1>
+  <h3>The Full-Stack Framework Built for Young Developers</h3>
+
+  <p>
+    <strong>Open Source • File-Based Routing • Security-First • Next.js-Like Experience</strong>
+  </p>
+
   <div>
     <img src="https://img.shields.io/badge/React-18.2.0-blue?logo=react" alt="React">
     <img src="https://img.shields.io/badge/Express-4.18.2-green?logo=express" alt="Express">
     <img src="https://img.shields.io/badge/Vite-4.4.0-yellow?logo=vite" alt="Vite">
+    <img src="https://img.shields.io/badge/License-MIT-brightgreen" alt="License">
+    <img src="https://img.shields.io/badge/Security-WAF%20Protected-red" alt="Security">
   </div>
+
+  <br>
+
+  <p><em>Zero configuration. Maximum productivity. Built by developers, for developers.</em></p>
 </div>
 
-# MareJS
+---
 
-MareJS is a full-stack JavaScript framework that simplifies web development by combining Express.js for backend APIs and React for frontend rendering. It utilizes file-based routing for both client-side and server-side, allowing developers to focus on building features rather than configuring routes.
+## 🎯 Why MareJS?
+
+MareJS was created to **empower young developers** to build production-ready web applications without the overwhelming complexity of modern frameworks. Whether you're building your first app or your tenth, MareJS provides:
+
+✨ **The simplicity of Next.js** - Brilliant JSX file-based routing with layouts
+🛡️ **Enterprise-grade security** - Built-in Web Application Firewall (WAF)
+🚀 **Zero configuration** - Start coding immediately, no setup required
+⚡ **Lightning-fast development** - Hot reload, instant feedback, pure joy
+🎓 **Learn by doing** - Clean code structure that teaches best practices
+⚔️ **Battle-tested** - Running production SaaS applications with real users
+
+**Perfect for:**
+- 👨‍🎓 Students learning full-stack development
+- 🚀 Startups building MVPs quickly
+- 💼 SaaS companies needing a Next.js alternative
+- 💡 Developers who want to focus on features, not configuration
+- 🌍 Anyone who believes in open-source collaboration
+
+---
+
+## 💎 What Makes MareJS Special?
+
+### 🎨 Next.js-Like File-Based Routing (Frontend)
+
+Create beautiful React applications with the same developer experience as Next.js:
+
+```jsx
+// pages/index.jsx → Your home page at '/'
+export default function Home() {
+  return <h1>Welcome to MareJS!</h1>;
+}
+
+// pages/blog/[slug].jsx → Dynamic blog posts
+export default function BlogPost({ slug }) {
+  return <article>Blog post: {slug}</article>;
+}
+
+// pages/_MainLayout.jsx → Shared layout for all pages
+export default function MainLayout({ children }) {
+  return (
+    <>
+      <nav>{/* Your navigation */}</nav>
+      <main>{children}</main>
+    </>
+  );
+}
+```
+
+**No routing configuration. Just create files.** MareJS handles the rest.
+
+### 🔌 File-Based API Routing (Backend)
+
+Build powerful APIs with the same file-based approach:
+
+```javascript
+// api/hello.js → Responds to /api/hello
+export default (req, res) => {
+  res.json({ message: 'Hello World!' });
+};
+
+// api/users/[id].js → Dynamic user endpoint
+export default (req, res) => {
+  const { id } = req.params;
+  res.json({ userId: id });
+};
+
+// api/public/webhook.js → Public endpoint (no auth)
+export default (req, res) => {
+  res.json({ status: 'ok' });
+};
+```
+
+**Routes in `/api/public/*` are accessible to everyone.**
+**All other routes require authentication.** Simple and secure.
+
+### 🛡️ Built-In Web Application Firewall (WAF)
+
+**This is what sets MareJS apart.** Most frameworks leave security as an afterthought. MareJS comes with enterprise-grade protection **out of the box**:
+
+- ✅ **XSS Protection** - Blocks script injection attacks
+- ✅ **SQL Injection Defense** - Context-aware detection with minimal false positives
+- ✅ **Path Traversal Prevention** - Stops directory traversal attacks
+- ✅ **Smart Detection** - Allows legitimate data while blocking attacks
+- ✅ **Zero Configuration** - Works immediately, customize as needed
+
+Example: WAF automatically blocks this attack:
+```bash
+# Attacker tries SQL injection
+GET /api/user?id=' OR 1=1--
+
+# MareJS responds:
+HTTP 403 Forbidden
+{
+  "error": "Forbidden",
+  "message": "Request blocked by Web Application Firewall",
+  "threats": [{ "type": "SQL Injection", "parameter": "query.id" }]
+}
+```
+
+**Learn more about security:** See `docs/serverside.txt` for complete WAF documentation.
 
 ## ✨ Features
 
@@ -48,54 +160,120 @@ Real-time communication with file-based WebSocket routing
 
 </div>
 
-## Installation
+---
 
-Create a new MareJS project using the following command:
+## 🚀 Quick Start
 
-```bash
-npx github:/emadklenka/marejs
-```
+Get up and running in 60 seconds:
 
-This command will set up a new MareJS project in a folder named my-app.
-
-## Getting Started
-
-After installation, navigate to your project directory and install dependencies:
+### 1. Create Your Project
 
 ```bash
+npx github:/emadklenka/marejs my-app
 cd my-app
 npm install
 ```
 
-Start the development server:
+### 2. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Your application will be running at [http://localhost:4000](http://localhost:4000).
+### 3. Start Building! 🎉
 
-## Project Structure
+Your app is now running at **http://localhost:4000**
 
-MareJS projects have a simple and intuitive structure:
+- 📄 Add pages in `pages/` folder
+- 🔌 Add APIs in `api/` folder
+- 🎨 Customize layouts in `_MainLayout.jsx`
+- 🛡️ Security is already enabled (WAF protects you)
 
-src/
-├── pages/
-│   ├── index.jsx
-│   ├── about.jsx
-│   └── user/
-│       └── [id].jsx
-├── api/
-│   ├── index.js
-│   ├── user/
-│   │   └── [id].js
-│   └── default.js
-├── public/
+**That's it!** No webpack config, no routing setup, no security configuration. Just code.
+
+---
+
+## 📚 Documentation
+
+### **New to MareJS? Start here:**
+
+- 📖 **[Server-Side Guide](docs/serverside.txt)** - Complete backend documentation
+  - Routing system explained
+  - API endpoint creation
+  - WAF configuration and security
+  - Environment variables
+  - Testing your APIs
+
+### **Quick References:**
+
+- 🎨 **Frontend Routing:** File-based, similar to Next.js (see Project Structure below)
+- 🔌 **Backend Routing:** File-based API endpoints (see `docs/serverside.txt`)
+- 🛡️ **Security (WAF):** Built-in protection (see `docs/serverside.txt`)
+- 🧪 **Testing:** Run `node tests/waftest.js` for security tests
+
+---
+
+## 📁 Project Structure
+
+MareJS keeps things simple and organized:
+
+```
+my-app/
+├── pages/                    📄 Frontend Routes (React/JSX)
+│   ├── index.jsx            → / (home page)
+│   ├── about.jsx            → /about
+│   ├── blog/
+│   │   └── [slug].jsx       → /blog/my-post (dynamic)
+│   ├── _app.jsx             → Root layout wrapper
+│   └── _MainLayout.jsx      → Navigation layout
+│
+├── api/                      🔌 Backend Routes (Express)
+│   ├── hello.js             → /api/hello
+│   ├── hello/
+│   │   └── index.js         → /api/hello (folder-based)
+│   ├── users/
+│   │   └── [id].js          → /api/users/123 (dynamic)
+│   ├── public/              → 🌍 Public routes (no auth)
+│   │   └── webhook.js       → /api/public/webhook
+│   └── __mare_serversettings/
+│       ├── server_startup.js   Server initialization
+│       ├── session.js          Session config
+│       ├── cors.js             CORS config
+│       └── middleware.js       Auth middleware
+│
+├── tests/                    🧪 Test Suite
+│   └── waftest.js           → WAF security tests
+│
+├── docs/                     📚 Documentation
+│   └── serverside.txt       → Complete backend guide
+│
+├── .mareJS/                  ⚙️ Framework Core (DON'T EDIT)
+│   ├── mare_server.js       → Main server
+│   └── waf/                 → Security modules
+│       ├── waf.js           → WAF middleware
+│       ├── xss.js           → XSS detection
+│       ├── sqli.js          → SQL injection detection
+│       └── pathtraversal.js → Path traversal detection
+│
+├── public/                   🎨 Static Assets
 │   └── assets/
-├── .marejs/
-│   └── (hidden framework files)
+│
+├── saferoutes.config.js      🛡️ WAF bypass rules (optional)
+├── .env                      🔐 Environment variables
 └── package.json
 ```
+
+### Key Directories:
+
+**✏️ You Edit These:**
+- `pages/` - Your React components (frontend routes)
+- `api/` - Your API endpoints (backend routes)
+- `api/__mare_serversettings/` - Server configuration
+- `.env` - Environment settings
+- `saferoutes.config.js` - WAF exemptions
+
+**🚫 Don't Touch These:**
+- `.mareJS/` - Framework internals (auto-generated)
 
 ## Routing System
 
@@ -338,15 +516,115 @@ Your application will be running at [http://localhost:4000](http://localhost:400
 - **Custom Middleware and Settings**: Advanced configurations can be added in the `api` folder, but for most use cases, simply adding pages and API endpoints is sufficient.
 - **Environment Variables**: You can use a `.env` file to manage environment-specific settings.
 
-## Conclusion
+---
 
-MareJS aims to simplify the web development process by eliminating boilerplate code and configuration. By leveraging file-based routing and integrating Express.js and React, you can quickly build full-stack applications with minimal setup.
+## 🌍 Open Source & Community
 
-## License
+MareJS is **100% open source** and built with ❤️ for the developer community.
 
-MareJS is open-source software licensed under the MIT License.
+### Why Open Source?
 
-Happy coding with MareJS!
+We believe that great tools should be accessible to everyone, especially young developers who are just starting their journey. MareJS is:
+
+- ✅ **Free forever** - No premium tiers, no hidden costs
+- 🤝 **Community-driven** - Your feedback shapes the future
+- 📚 **Learning-friendly** - Clean, readable code to learn from
+- 🚀 **Production-ready** - Battle-tested in real SaaS applications
+- ⚔️ **Proven at scale** - Running live systems with actual users
+
+### Perfect For:
+
+- 👨‍💻 **Students** learning full-stack development
+- 🎓 **Bootcamp graduates** building their portfolios
+- 🚀 **Indie hackers** launching MVPs quickly
+- 💡 **Developers** who value simplicity and security
+- 🌱 **Anyone** starting their coding journey
+
+### Contributing
+
+We welcome contributions from developers of all skill levels! Whether it's:
+- 🐛 Reporting bugs
+- 💡 Suggesting features
+- 📖 Improving documentation
+- 🔧 Submitting pull requests
+
+Every contribution makes MareJS better for the entire community.
+
+---
+
+## 📈 What's Next?
+
+After you're comfortable with the basics:
+
+1. 📖 Read the complete **[Server-Side Guide](docs/serverside.txt)**
+2. 🛡️ Learn about **WAF security configuration**
+3. 🧪 Run **automated tests** with `node tests/waftest.js`
+4. 🔌 Explore **WebSocket support** for real-time features
+5. 🚀 Deploy your app to production
+
+---
+
+## 💬 Philosophy
+
+> "The best framework is the one that gets out of your way."
+
+MareJS was born from **real frustration with Next.js complexity** while building production SaaS applications. We loved the developer experience but needed:
+- **CSR instead of SSR** (SaaS apps are behind auth anyway)
+- **Full Express control** (not serverless limitations)
+- **Built-in security** (WAF protecting customer data)
+- **Simple deployment** (VPS/Docker, not vendor lock-in)
+
+So we built MareJS - keeping Next.js's brilliant file-based routing while removing everything that fought against SaaS architecture.
+
+**MareJS is for builders, dreamers, and learners.**
+
+Whether you're building your first "Hello World" or scaling a SaaS to thousands of users, MareJS gives you the tools you need without the complexity you don't.
+
+**Battle-tested. Production-ready. Open source.**
+
+---
+
+## 📄 License
+
+MareJS is open-source software licensed under the **MIT License**.
+
+Use it for personal projects, commercial applications, or anything in between. No restrictions, no strings attached.
+
+---
+
+## 🙏 Acknowledgments
+
+Built with passion for the next generation of developers.
+
+Special thanks to the open-source community and all the frameworks that inspired MareJS:
+- Next.js (file-based routing inspiration)
+- Express.js (robust backend)
+- React (amazing UI library)
+- Vite (lightning-fast builds)
+
+---
+
+<div align="center">
+
+### Ready to build something amazing?
+
+```bash
+npx github:/emadklenka/marejs my-app
+cd my-app
+npm run dev
+```
+
+**Start coding in 60 seconds. Deploy in minutes. Built for developers like you.**
+
+---
+
+Made with ❤️ for young developers everywhere
+
+⭐ **Star us on GitHub** if MareJS helps you build better apps!
+
+[Documentation](docs/serverside.txt) • [Report Bug](https://github.com/emadklenka/marejs/issues) • [Request Feature](https://github.com/emadklenka/marejs/issues)
+
+</div>
 
 ## 🔌 WebSocket Support
 

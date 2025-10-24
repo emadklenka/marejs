@@ -8,6 +8,7 @@ import net from "net";
 import dotenv from 'dotenv';
 import { fileURLToPath, pathToFileURL } from "url";
 import { detectPathTraversal } from "./waf/pathtraversal.js";
+import { wafMiddleware } from "./waf/waf.js";
 
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
@@ -46,6 +47,7 @@ const dynamicImport = async (routePath) => {
 };
 
 app.use("/api",
+  wafMiddleware,  // WAF runs FIRST to catch attacks early
  // mareRateLimiter,
   getMareSession(),
   getMarecors(),
