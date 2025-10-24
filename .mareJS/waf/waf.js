@@ -176,11 +176,12 @@ export function wafMiddleware(req, res, next) {
 
   // If threats detected
   if (threats.length > 0) {
+    const logPrefix = wafMode === "block" ? "[WAF BLOCKED]" : "[WAF LOGGED]";
     threats.forEach((threat) => {
       const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
       const ip = req.ip || req.connection.remoteAddress || "unknown";
       console.log(
-        `[WAF BLOCKED] ${timestamp} | IP: ${ip} | Path: ${req.path} | Attack: ${threat.type} | Param: ${threat.key} | Value: ${threat.value}`
+        `${logPrefix} ${timestamp} | IP: ${ip} | Path: ${req.path} | Attack: ${threat.type} | Param: ${threat.key} | Value: ${threat.value}`
       );
     });
 
