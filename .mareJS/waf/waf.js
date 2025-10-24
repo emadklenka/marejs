@@ -9,7 +9,7 @@
 import { detectPathTraversal } from "./pathtraversal.js";
 import { detectXSS } from "./xss.js";
 import { detectSQLInjection } from "./sqli.js";
-import { getSafeRoutes } from "../../api/__mare_serversettings/server_startup.js";
+import { getSafeRoutes } from "../mare_server.js";
 
 /**
  * Scan a single value against all detection functions

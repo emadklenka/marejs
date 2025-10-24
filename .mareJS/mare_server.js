@@ -21,12 +21,46 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-app.use(express.json());
+const jsonLimit = process.env.JSON_LIMIT || "256mb";
+app.use(express.json({ limit: jsonLimit }));
 
 // Global rate limiter
 //app.use(mareRateLimiter);
 
 const isDev = process.env.NODE_ENV === "development";
+
+// ==== WAF Safe Routes Configuration ====
+let safeRoutesConfig = { exact: [], patterns: [], partial: [] };
+
+/**
+ * Get the loaded safe routes configuration
+ * @returns {Object} Safe routes config
+ */
+export function getSafeRoutes() {
+  return safeRoutesConfig;
+}
+
+/**
+ * Load WAF safe routes configuration from saferoutes.config.js
+ */
+async function loadSafeRoutes() {
+  try {
+    const safeRoutesPath = path.resolve(__dirname, "../saferoutes.config.js");
+    if (fs.existsSync(safeRoutesPath)) {
+      const module = await import(pathToFileURL(safeRoutesPath).href);
+      safeRoutesConfig = module.default || { exact: [], patterns: [], partial: [] };
+      console.log("[MARE SERVER] WAF safe routes configuration loaded");
+      if (safeRoutesConfig.exact?.length > 0 || safeRoutesConfig.patterns?.length > 0 || safeRoutesConfig.partial?.length > 0) {
+        console.log(`[MARE SERVER] Safe routes: ${safeRoutesConfig.exact?.length || 0} exact, ${safeRoutesConfig.patterns?.length || 0} patterns, ${safeRoutesConfig.partial?.length || 0} partial`);
+      }
+    } else {
+      console.log("[MARE SERVER] No saferoutes.config.js found - WAF will check all routes");
+    }
+  } catch (err) {
+    console.warn("[MARE SERVER] Failed to load saferoutes.config.js:", err.message);
+    console.warn("[MARE SERVER] WAF will check all routes (no bypasses)");
+  }
+}
 
  
 
@@ -79,7 +113,10 @@ if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute
   return res.status(400).json({ error: "Invalid API path - outside allowed directory" });
 }
 
-  routePath = routePath.replace(".mareJS", "api");
+  // Use path.sep for cross-platform compatibility (Windows uses backslash, Unix uses forward slash)
+  routePath = routePath.split(path.sep).map(segment =>
+    segment === '.mareJS' ? 'api' : segment
+  ).join(path.sep);
   const indexFilePath = path.join(routePath, "index.js");
   const filePath = `${routePath}.js`;
 
@@ -219,6 +256,10 @@ async function setupWSSRouting(server) {
   const startingPort = process.env.PORT || 4000;
   const PORT = await findAvailablePort(startingPort);
 
+  // Load WAF safe routes configuration (framework internal)
+  await loadSafeRoutes();
+
+  // Run user-defined startup logic
   const ready = await Server_Startup();
   if (!ready) {
     console.error("SERVER FAILED TO START BECAUSE OF STARTUP SCRIPT ERROR");
