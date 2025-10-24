@@ -7,6 +7,7 @@ import fs from "fs";
 import net from "net";
 import dotenv from 'dotenv';
 import { fileURLToPath, pathToFileURL } from "url";
+import { detectPathTraversal } from "./waf/pathtraversal.js";
 
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
@@ -31,6 +32,11 @@ const isDev = process.env.NODE_ENV === "development";
 // ==== API Routing ====
 const dynamicImport = async (routePath) => {
   try {
+    // Check if path exists and is a file before importing
+    if (!fs.existsSync(routePath) || !fs.statSync(routePath).isFile()) {
+      return null;
+    }
+
     const route = await import(pathToFileURL(routePath).href);
     return route.default;
   } catch (err) {
@@ -51,11 +57,12 @@ app.use("/api",
   const normalizedPath = path.normalize(req.path);
   
   // Check for path traversal attempts using multiple techniques
-  const hasTraversal = normalizedPath.includes('..') ||
-                      req.path.includes('..') ||
-                      req.path.includes('%2e%2e') ||
-                      req.path.includes('%2e.') ||
-                      req.path.includes('.%2e');
+  const hasTraversal =detectPathTraversal(normalizedPath)
+  //  normalizedPath.includes('..') ||
+  //                     req.path.includes('..') ||
+  //                     req.path.includes('%2e%2e') ||
+  //                     req.path.includes('%2e.') ||
+  //                     req.path.includes('.%2e');
   
   if (hasTraversal) {
     return res.status(400).json({ error: "Invalid API path - path traversal detected" });
@@ -76,11 +83,11 @@ if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute
 
   let routeHandler = null;
 
-  if (fs.existsSync(indexFilePath)) {
+  if (fs.existsSync(indexFilePath) && fs.statSync(indexFilePath).isFile()) {
     routeHandler = await dynamicImport(indexFilePath);
   }
 
-  if (!routeHandler && fs.existsSync(filePath)) {
+  if (!routeHandler && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     routeHandler = await dynamicImport(filePath);
   }
 
@@ -108,7 +115,7 @@ if (path.relative(apiBasePath, resolvedPath).startsWith('..') || path.isAbsolute
       }
     }
 
-    if (fs.existsSync(parentPath)) {
+    if (fs.existsSync(parentPath) && fs.statSync(parentPath).isFile()) {
       routeHandler = await dynamicImport(parentPath);
       if (routeHandler) req.params = params;
     }
