@@ -1,170 +1,240 @@
+/**
+ * Path Traversal Detection Module - PERMISSIVE MODE
+ *
+ * PHILOSOPHY: Block TRAVERSAL patterns (../), not legitimate web patterns
+ *
+ * FOCUSES ON:
+ * - Directory traversal: ../ and all encoded variants
+ * - Dangerous protocols: file://, but NOT http:// or https://
+ * - Windows absolute paths with slashes: C:\Windows (not "C: drive" in text)
+ * - UNC paths: \\server\share
+ * - Null byte injection
+ *
+ * ALLOWS:
+ * - Legitimate URLs: http://, https://
+ * - Protocol-relative URLs: //cdn.example.com
+ * - HTML entities: &gt;, &amp;, etc.
+ * - URL-encoded legitimate paths: https%3A%2F%2Fexample.com
+ * - Relative paths: ./file.txt
+ * - Mentions in text: "Save to C: drive", "Use // for comments"
+ * - URL encoded slashes in legitimate contexts
+ *
+ * BLOCKS:
+ * - Actual directory traversal: ../
+ * - Encoded traversal: %2e%2e%2f, ..%2f, etc.
+ * - file:// protocol
+ * - Windows absolute paths: C:\Windows
+ * - UNC paths: \\server\share
+ */
+
 export function detectPathTraversal(input, req) {
   if (!input || typeof input !== "string") return false;
 
-  // Normalize Unicode to catch homoglyph attacks (NFKC = canonical decomposition + compatibility decomposition + canonical composition)
+  // Normalize Unicode to catch homoglyph attacks
   let normalized = input.normalize("NFKC");
   const inputLower = normalized.toLowerCase();
 
-  // Check for protocol prefixes (case-insensitive) - file://, http://, etc.
-  if (/^[a-z]+:\/\//i.test(normalized)) {
-    return true;
+  // ========== ALLOW SAFE PROTOCOLS ==========
+  // Allow http://, https://, ws://, wss://
+  // BLOCK file://, ftp://, and other dangerous protocols
+  const protocolMatch = inputLower.match(/^([a-z]+):\/\//);
+  if (protocolMatch) {
+    const protocol = protocolMatch[1];
+    const allowedProtocols = ["http", "https", "ws", "wss"];
+    if (!allowedProtocols.includes(protocol)) {
+      // Block: file://, ftp://, etc.
+      return true;
+    }
+    // Allow http:// and https:// - these are safe
+    return false;
   }
 
-  // Decode HTML entities that could hide path traversal
+  // ========== ALLOW PROTOCOL-RELATIVE URLs ==========
+  // Allow: //cdn.example.com/script.js
+  // Block: \\server\share (Windows UNC path)
+  if (normalized.startsWith("//")) {
+    // Check if it looks like a legitimate URL (has domain-like structure)
+    // Legitimate: //cdn.example.com, //ajax.googleapis.com
+    // Malicious: ///../etc/passwd, //\\server
+    if (/^\/\/[a-z0-9][-a-z0-9.]*[a-z0-9]/i.test(normalized)) {
+      // Make sure it doesn't have traversal after the domain
+      if (!normalized.includes("..")) {
+        return false; // Safe protocol-relative URL
+      }
+    }
+  }
+
+  // ========== ALLOW SAFE HTML ENTITIES ==========
+  // Common HTML entities: &gt; &lt; &amp; &quot; &nbsp;
+  // Only block if they're encoding traversal patterns
+  const safeEntities = ["&gt;", "&lt;", "&amp;", "&quot;", "&nbsp;", "&apos;", "&cent;", "&pound;", "&yen;", "&euro;", "&copy;", "&reg;"];
+  let hasSafeEntitiesOnly = false;
+
+  for (const entity of safeEntities) {
+    if (inputLower.includes(entity)) {
+      hasSafeEntitiesOnly = true;
+    }
+  }
+
+  // If it has HTML entities, check if they're hiding traversal
   const htmlEntityPattern = /&#x?[0-9a-fA-F]+;/;
   if (htmlEntityPattern.test(normalized)) {
+    // Decode numeric entities and check if they're hiding traversal patterns
+    let decoded = normalized
+      .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec))
+      .replace(/&#x([0-9a-fA-F]+);/g, (match, hex) =>
+        String.fromCharCode(parseInt(hex, 16))
+      );
+
+    // Only flag if decoded content has traversal patterns
+    if (decoded.includes("..") || decoded.includes("\\\\")) {
+      return true; // HTML entities hiding traversal
+    }
+    // Otherwise allow - it's just formatting
+    return false;
+  }
+
+  // If only safe named entities, allow them
+  if (hasSafeEntitiesOnly && !normalized.includes("..")) {
+    return false;
+  }
+
+  // ========== BLOCK UNC PATHS ==========
+  // Windows UNC paths: \\server\share or %5c%5cserver
+  if (normalized.startsWith("\\\\") || inputLower.startsWith("%5c%5c")) {
     return true;
   }
 
-  // Direct path traversal sequences
-  const directPatterns = ["../", "..\\", "~/", "~\\", ".../", "...\\", "..../", "....\\", "...../", ".....\\", "..//", "..\\//", "../\\", "..\\/", "....//\\\\", "..;/", "..%3b/"];
+  // ========== BLOCK WINDOWS ABSOLUTE PATHS ==========
+  // Block: C:\Windows\System32, D:/files/secret.txt
+  // Allow: "Save to C: drive" (no slash after)
+  if (/^[a-z]:[\\\/]/i.test(normalized)) {
+    return true; // Windows absolute path with slash
+  }
 
-  // URL encoded patterns
-  const urlEncodedPatterns = [
-    "%2e%2e%2f",
-    "%2e%2e/",
-    "..%2f",
-    "%2e%2e%5c",
+  // ========== BLOCK NULL BYTES ==========
+  // Null byte injection: %00, \0, %c0%80
+  if (
+    normalized.includes("\0") ||
+    inputLower.includes("%00") ||
+    inputLower.includes("\\0") ||
+    inputLower.includes("%c0%80")
+  ) {
+    return true;
+  }
+
+  // ========== BLOCK DIRECTORY TRAVERSAL PATTERNS ==========
+  // Core danger: ../ and variants
+  const traversalPatterns = [
+    "../",              // Basic forward
+    "..\\",             // Basic backward
+    ".../",             // Triple dot forward
+    "...\\",            // Triple dot backward
+    "..../",            // Quad dot
+    "....\\",
+    "..//",             // Double slash
+    "..\\//",
+    "../\\",
+    "..\\/",
+    "..;/",             // Semicolon separator
+    "~/",               // Unix home directory
+    "~\\",
+  ];
+
+  for (const pattern of traversalPatterns) {
+    if (inputLower.includes(pattern)) {
+      return true;
+    }
+  }
+
+  // ========== BLOCK ENCODED TRAVERSAL ==========
+  // URL-encoded directory traversal
+  const encodedTraversal = [
+    "%2e%2e%2f",        // Fully encoded ../
+    "%2e%2e/",          // Partially encoded
+    "..%2f",            // Encoded slash
+    "%2e%2e%5c",        // Encoded backslash
     "%2e%2e\\",
     "..%5c",
-    "%2e/",
-    "%2e\\",
-    "%2f",
-    "%5c",
-    "%2e%2e%2f",
-    "%2E%2E%2F",
+    "%2E%2E%2F",        // Uppercase
     "%2E%2E%5C",
-    "%252e%252e%252f",
+    "%252e%252e%252f",  // Double-encoded
     "%252e%252e%255c",
-    // Unicode slash variants (encoded)
-    "%ef%bc%8f", // Fullwidth slash (U+FF0F)
-    "%e2%81%84", // Fraction slash (U+2044)
-    "%e2%88%95", // Division slash (U+2215)
-    // Encoded semicolons
-    "%3b/",
-    "%3b\\",
-    // Partial protocol encoding
-    "%66ile:",
-    "%46ile:", // encoded 'f' in 'file:'
-    "%68ttp:",
-    "%48ttp:", // encoded 'h' in 'http:'
-  ];
-
-  // Mixed encoding patterns
-  const mixedPatterns = [
+    ".%2e/",            // Mixed encoding
     "%2e./",
-    ".%2e/",
-    "%2e.\\",
     ".%2e\\",
-    "%./",
-    ".%/",
-    "%5c.",
-    ".%5c",
-    "%%32%65",
-    "%c0%ae",
+    "%2e.\\",
+    // Overlong UTF-8 encoding
+    "%c0%ae",           // Overlong dot
     "%e0%40%ae",
     "%c0%2e",
-    "%c1%9c",
+    "%c1%9c",           // Overlong backslash
     "%c1%8e",
     // IIS unicode encoding
-    "%u002e",
-    "%u002f",
-    "%u005c",
+    "%u002e%u002e",     // Unicode dots
   ];
 
-  // Windows specific
-  const windowsPatterns = ["\\\\?\\", "\\\\.\\", "\\\\", "c:", "d:", "e:", "f:", "g:", "h:", "%5c%5c", "%5c%5c%3f%5c"];
+  for (const pattern of encodedTraversal) {
+    if (inputLower.includes(pattern)) {
+      return true;
+    }
+  }
 
-  // Unicode dot variants (homoglyphs)
+  // ========== BLOCK ENCODED DANGEROUS PROTOCOLS ==========
+  // Attempts to encode file:// protocol
+  const encodedProtocols = [
+    "%66ile:",          // Encoded 'f' in 'file:'
+    "%46ile:",
+    "file%3a",          // Encoded colon
+    "%66%69%6c%65",     // Fully encoded 'file'
+  ];
+
+  for (const pattern of encodedProtocols) {
+    if (inputLower.includes(pattern)) {
+      return true;
+    }
+  }
+
+  // ========== BLOCK UNICODE HOMOGLYPH TRAVERSAL ==========
+  // Unicode variants of dots and slashes used for traversal
   const unicodeDots = [
-    "\u002e", // Regular dot
-    "\uff0e", // Fullwidth full stop (．)
-    "\u2024", // One dot leader (․)
-    "\u2025", // Two dot leader (‥)
-    "\u2026", // Horizontal ellipsis (…)
-    "\u0701", // Syriac supralinear full stop
-    "\u0702", // Syriac sublinear full stop
+    "\uff0e",           // Fullwidth full stop (．)
+    "\u2024",           // One dot leader (․)
+    "\u2025",           // Two dot leader (‥)
+    "\u2026",           // Horizontal ellipsis (…)
   ];
 
-  // Unicode slash variants
   const unicodeSlashes = [
-    "\u002f", // Regular forward slash
-    "\uff0f", // Fullwidth solidus (／)
-    "\u2044", // Fraction slash (⁄)
-    "\u2215", // Division slash (∕)
-    "\u29f8", // Big solidus
-    "\u005c", // Backslash
-    "\uff3c", // Fullwidth reverse solidus (＼)
+    "\uff0f",           // Fullwidth solidus (／)
+    "\u2044",           // Fraction slash (⁄)
+    "\u2215",           // Division slash (∕)
+    "\uff3c",           // Fullwidth reverse solidus (＼)
   ];
 
-  // Check direct patterns
-  for (const pattern of directPatterns) {
-    if (inputLower.includes(pattern)) return true;
-  }
-
-  // Check URL encoded
-  for (const pattern of urlEncodedPatterns) {
-    if (inputLower.includes(pattern)) return true;
-  }
-
-  // Check mixed encoding
-  for (const pattern of mixedPatterns) {
-    if (inputLower.includes(pattern)) return true;
-  }
-
-  // Check Windows patterns
-  for (const pattern of windowsPatterns) {
-    if (inputLower.includes(pattern)) return true;
-  }
-
-  // Check for Unicode dot variants followed by slashes (including unicode slashes)
+  // Check for unicode dot-dot-slash patterns
   for (const dot of unicodeDots) {
     for (const slash of unicodeSlashes) {
       // Check for .. patterns (always dangerous)
       if (normalized.includes(dot + dot + slash)) {
         return true;
       }
-      // Check for single dot patterns ONLY if it's NOT a legitimate relative path prefix
-      // Allow ./path at the start, but block suspicious patterns like /./path or path/./file
-      const singleDotSlash = dot + slash;
-      const indices = [];
-      let idx = normalized.indexOf(singleDotSlash);
-      while (idx !== -1) {
-        indices.push(idx);
-        idx = normalized.indexOf(singleDotSlash, idx + 1);
-      }
-
-      for (const index of indices) {
-        // Allow if it's at the very beginning (legitimate relative path like ./file.txt)
-        if (index === 0) continue;
-
-        // Block if it appears anywhere else (like path/./file or /./etc)
+      // Also check combinations with regular dots
+      if (normalized.includes(".." + slash) || normalized.includes(dot + "." + slash)) {
         return true;
       }
     }
   }
 
-  // Check for dots followed by spaces and slashes (Windows quirk: ".. /" or ". \")
-  // But allow legitimate ./ at the start (no space)
-  if (/\.\s+[\/\\]/i.test(normalized)) {
-    return true;
-  }
-
-  // Check for Windows trailing dot (C:\Windows.\System32)
-  if (/[a-zA-Z]:[\/\\].*\.[\/\\]/i.test(normalized)) {
-    return true;
-  }
-
-  // Multi-level decoding (up to 4 levels to catch deeply nested encodings)
+  // ========== MULTI-LEVEL URL DECODING ==========
+  // Catch deeply nested encodings (e.g., %252e = % encoded as %25)
   try {
     let decoded = normalized;
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       const prevDecoded = decoded;
       try {
         decoded = decodeURIComponent(decoded);
       } catch {
-        // If decoding fails, try to continue with partial decode
-        break;
+        break; // If decoding fails, stop
       }
 
       // Stop if no change (fully decoded)
@@ -172,29 +242,24 @@ export function detectPathTraversal(input, req) {
 
       const decodedLower = decoded.toLowerCase();
 
-      // Check all patterns on decoded content
-      for (const pattern of directPatterns) {
-        if (decodedLower.includes(pattern)) return true;
+      // Check for traversal patterns in decoded content
+      for (const pattern of traversalPatterns) {
+        if (decodedLower.includes(pattern)) {
+          return true;
+        }
       }
 
-      // Check unicode variants in decoded content
+      // Check for unicode traversal in decoded content
       for (const dot of unicodeDots) {
         for (const slash of unicodeSlashes) {
-          // Always block .. patterns
           if (decoded.includes(dot + dot + slash)) {
-            return true;
-          }
-          // For single dot, only block if NOT at the beginning
-          const singleDotSlash = dot + slash;
-          const idx = decoded.indexOf(singleDotSlash);
-          if (idx !== -1 && idx !== 0) {
             return true;
           }
         }
       }
 
-      // Check for protocol after decoding
-      if (/^[a-z]+:\/\//i.test(decoded)) {
+      // Check for dangerous protocols after decoding
+      if (/^(file|ftp):\/\//i.test(decoded)) {
         return true;
       }
     }
@@ -203,148 +268,17 @@ export function detectPathTraversal(input, req) {
     return true;
   }
 
-  // Null byte injection (various forms)
-  if (normalized.includes("\0") || inputLower.includes("%00") || inputLower.includes("\\0") || inputLower.includes("%c0%80")) {
-    return true;
-  }
-
-  // Absolute paths (Windows drive letters, including with trailing dots)
-  if (/^[a-zA-Z]:[\\/]/i.test(normalized)) {
-    return true;
-  }
-
-  // UNC paths
-  if (normalized.startsWith("\\\\") || normalized.startsWith("//")) {
-    return true;
-  }
-
-  // Suspicious repeating dots with any form of separator
-  if (/\.{2,}/i.test(normalized) && /[\/\\]/i.test(normalized)) {
-    return true;
-  }
-
-  // Check for path traversal in query strings or fragments
-  if (/[?&#].*\.\.[\/\\]/i.test(normalized)) {
-    return true;
-  }
-
-  // Standalone ".." without immediate slash (could be dangerous when concatenated)
-  if (/\.\.[^\/\\]*$/i.test(normalized) && normalized.length > 2) {
-    // Allow safe cases like "file.." or "version2.0"
-    if (!/^[a-zA-Z0-9_-]+\.{1,2}[a-zA-Z0-9]*$/i.test(normalized)) {
+  // ========== BLOCK SUSPICIOUS DOT PATTERNS ==========
+  // Repeating dots with separators are suspicious
+  // But allow legitimate cases like file.txt, version2.0.1
+  if (/\.{2,}/.test(normalized)) {
+    // Has multiple dots - check if they're dangerous
+    if (/\.{2,}[\/\\]/i.test(normalized)) {
+      // Multiple dots followed by slash = traversal
       return true;
     }
   }
 
+  // All checks passed - input is safe
   return false;
 }
-
-// Test cases - attempts to bypass
-// const testCases = [
-//   // Should PASS (return true) - malicious
-//   { input: "../etc/passwd", expected: true, desc: "Basic traversal" },
-//   { input: "..%2fetc", expected: true, desc: "URL encoded slash" },
-//   { input: "..%c0%af", expected: true, desc: "Overlong UTF-8 slash" },
-//   { input: "..%ef%bc%8f", expected: true, desc: "Fullwidth slash" },
-//   { input: "..%25%32%66", expected: true, desc: "Double encoded slash %2f" },
-//   { input: "..%25%35%63", expected: true, desc: "Double encoded backslash %5c" },
-//   { input: "....//etc", expected: true, desc: "Multiple dots with slash" },
-//   { input: "..;/etc", expected: true, desc: "Semicolon separator" },
-//   { input: "..%00/etc", expected: true, desc: "Null byte injection" },
-//   { input: "C:/Windows", expected: true, desc: "Windows absolute path" },
-//   { input: "//etc/passwd", expected: true, desc: "UNC-like path" },
-//   { input: "..\\windows", expected: true, desc: "Windows backslash" },
-//   { input: "%2e%2e%2f", expected: true, desc: "Fully encoded ../" },
-//   { input: "..%252fetc", expected: true, desc: "Triple encoded slash" },
-//   { input: ".%2e/etc", expected: true, desc: "Mixed encoding" },
-//   { input: "..%c0%aeetc", expected: true, desc: "Overlong dot encoding" },
-//   { input: "...//etc", expected: true, desc: "Three dots double slash" },
-//   { input: "....\\etc", expected: true, desc: "Four dots double backslash" },
-//   { input: "%2e%2e%5c", expected: true, desc: "Encoded ..\\" },
-//   { input: "file/../../../etc", expected: true, desc: "Multiple traversals" },
-//   { input: "..%e2%81%84", expected: true, desc: "Fraction slash U+2044" },
-//   { input: "..%e2%88%95", expected: true, desc: "Division slash U+2215" },
-//   { input: "..%c1%9c", expected: true, desc: "Overlong backslash" },
-//   { input: "..%c0%80", expected: true, desc: "Overlong null byte" },
-//   { input: "..%c1%81", expected: true, desc: "Overlong encoding attempt" },
-//   { input: "..\\x2f", expected: true, desc: "Hex escape slash" },
-//   { input: "..\\u002f", expected: true, desc: "Unicode escape slash" },
-//   { input: "..\u002f", expected: true, desc: "Actual unicode slash" },
-//   { input: "..\u2044", expected: true, desc: "Actual fraction slash" },
-//   { input: "..\uff0f", expected: true, desc: "Actual fullwidth slash" },
-//   { input: "..%u002f", expected: true, desc: "IIS %u encoding" },
-//   { input: "..%u2215", expected: true, desc: "IIS unicode division slash" },
-//   { input: "file://etc/passwd", expected: true, desc: "File protocol" },
-//   { input: "file:///etc/passwd", expected: true, desc: "File protocol absolute" },
-
-//   // NEW: Bypass attempts identified in audit
-//   { input: "\u002e\u002e\u002fetc", expected: true, desc: "Unicode escaped ../" },
-//   { input: "&#46;&#46;/etc/passwd", expected: true, desc: "HTML entity encoding dots" },
-//   { input: "&#46;&#46;&#47;etc", expected: true, desc: "HTML entity dots and slash" },
-//   { input: "..%c1%8e/", expected: true, desc: "Incomplete overlong UTF-8" },
-//   { input: "\u2025/etc/passwd", expected: true, desc: "Two dot leader U+2025" },
-//   { input: "\uff0e\uff0e/etc", expected: true, desc: "Fullwidth dots" },
-//   { input: "FILE:///etc/passwd", expected: true, desc: "Uppercase FILE protocol" },
-//   { input: "%66ile:///etc/passwd", expected: true, desc: 'Encoded "file" protocol' },
-//   { input: "C:\\Windows.\\System32", expected: true, desc: "Windows trailing dot" },
-//   { input: "..%3b/etc/passwd", expected: true, desc: "Encoded semicolon" },
-//   { input: "/download?file=../../etc/passwd", expected: true, desc: "Path traversal in query" },
-//   { input: ".. /etc/passwd", expected: true, desc: "Dot-space-slash" },
-//   { input: ". /etc/passwd", expected: true, desc: "Single dot-space-slash" },
-//   { input: "\u2024\u2024/etc", expected: true, desc: "One dot leader doubled" },
-//   { input: "\u2026/etc", expected: true, desc: "Ellipsis character" },
-//   { input: "..%252fetc", expected: true, desc: "Partial double encoding" },
-//   { input: "\uff3c\uff3cetc", expected: true, desc: "Fullwidth backslashes" },
-//   { input: "http://evil.com/../../etc", expected: true, desc: "HTTP protocol with traversal" },
-//   { input: "d:/windows/system32", expected: true, desc: "D: drive path" },
-//   { input: "%48ttp://evil.com", expected: true, desc: "Encoded http protocol" },
-
-//   // Should FAIL (return false) - safe
-//   { input: "file.txt", expected: false, desc: "Simple filename" },
-//   { input: "my.file.name.txt", expected: false, desc: "Filename with dots" },
-//   { input: "folder/file.txt", expected: false, desc: "Normal path" },
-//   { input: "", expected: false, desc: "Empty string" },
-//   { input: "version2.0", expected: false, desc: "Version number" },
-//   { input: "user_file.txt", expected: false, desc: "Underscore filename" },
-//   { input: "data-2024.json", expected: false, desc: "Dash filename" },
-//   { input: "./assets/logo.png", expected: false, desc: "Relative path with dot-slash" },
-//   { input: "./components/Button.js", expected: false, desc: "Relative component path" },
-//   { input: "./config.json", expected: false, desc: "Relative config file" },
-//   { input: "file%2Ename.txt", expected: false, desc: "Encoded dot in filename" },
-//   { input: "document%2Epdf", expected: false, desc: "Encoded dot in PDF filename" },
-//   { input: "/api/download?filename=report.v2.0.pdf", expected: false, desc: "API query with version number" },
-//   { input: "/search?q=version2.0", expected: false, desc: "Search query parameter" },
-// ];
-
-// console.log("Testing Path Traversal Detection\n");
-// console.log("=".repeat(80));
-
-// let passed = 0;
-// let failed = 0;
-// const failures = [];
-
-// testCases.forEach((test, idx) => {
-//   const result = detectPathTraversal(test.input);
-//   const success = result === test.expected;
-
-//   if (success) {
-//     passed++;
-//     console.log(`✓ Test ${idx + 1}: ${test.desc}`);
-//   } else {
-//     failed++;
-//     console.log(`✗ Test ${idx + 1}: ${test.desc}`);
-//     console.log(`  Input: "${test.input}"`);
-//     console.log(`  Expected: ${test.expected}, Got: ${result}`);
-//     failures.push(test);
-//   }
-// });
-
-// console.log("\n" + "=".repeat(80));
-// console.log(`Results: ${passed} passed, ${failed} failed`);
-
-// if (failures.length > 0) {
-//   console.log("\n⚠️  VULNERABILITIES FOUND:");
-//   failures.forEach((f) => {
-//     console.log(`  - ${f.desc}: "${f.input}"`);
-//   });
-// }

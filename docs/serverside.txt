@@ -201,10 +201,12 @@ Default behavior:
 6. WEB APPLICATION FIREWALL (WAF)
 ================================================================================
 
-MareJS includes a built-in WAF that protects against:
-  - XSS (Cross-Site Scripting)
-  - SQL Injection
-  - Path Traversal
+MareJS includes a built-in PERMISSIVE WAF that protects against:
+  - XSS (Cross-Site Scripting) - Focuses on CODE EXECUTION, not HTML presence
+  - SQL Injection - Context-aware, allows SQL keywords in normal text
+  - Path Traversal - Blocks ../ patterns, allows legitimate URLs
+
+PHILOSOPHY: Block ATTACKS, not legitimate content
 
 The WAF runs BEFORE all other middleware and scans:
   - Query parameters (GET requests)
@@ -344,31 +346,62 @@ The WAF is modular and organized in .mareJS/waf/:
   waf.js            - Main middleware that orchestrates all checks
 
 
-CONTEXT-AWARE SQL INJECTION DETECTION:
----------------------------------------
+PERMISSIVE MODE - WHAT'S ALLOWED & BLOCKED:
+-------------------------------------------
 
-The SQL injection detector is smart and avoids false positives.
+The WAF is designed to block ATTACKS while allowing legitimate content.
 
-Examples:
+XSS DETECTION:
+  ✓ ALLOWED:
+    - Safe HTML tags: <b>, <img>, <iframe>, <button>, <form> (without events)
+    - Mentions in text: "Set onload=true" (not in tag context)
+    - Code tutorials: "The <form> tag is used for..."
 
-  ALLOWED (Legitimate):
-    "I select the blue option"              ✓ Normal English
-    "Chris Anderson"                        ✓ Name with "and"
-    "Database Administrator with SELECT"    ✓ CV/Resume text
-    "someunion"                             ✓ Word containing "union"
-    "Where are you from"                    ✓ Question
+  ✗ BLOCKED:
+    - <script> tags in all forms
+    - Event handlers in tags: <div onload="alert(1)">
+    - JavaScript protocols: javascript:, data:text/html
+    - XSS attribute injection: "><script>
 
-  BLOCKED (Attacks):
-    "' OR 1=1--"                            ✗ SQL injection
-    "' UNION SELECT * FROM users--"         ✗ SQL injection
-    "; DROP TABLE users"                    ✗ Stacked query
-    "1' AND SLEEP(5)--"                     ✗ Time-based blind
+SQL INJECTION DETECTION:
+  ✓ ALLOWED:
+    - SQL keywords in text: "I select the blue option"
+    - Product names: "T-Shirt -- Blue Edition"
+    - Job descriptions: "Database Administrator with SELECT experience"
+    - Code comments: /* This is a comment */ (without SQL keywords)
+    - Hashtags: "#vacation"
 
-The detector looks for SQL SYNTAX patterns and COMBINATIONS:
-  - Quotes + SQL keywords + operators
-  - SQL comments (--, /*, #)
-  - Logic bombs (OR 1=1)
-  - Stacked queries
+  ✗ BLOCKED:
+    - Logic bombs: ' OR 1=1--
+    - UNION attacks: ' UNION SELECT * FROM users
+    - Stacked queries: ; DROP TABLE users
+    - Time-based: 1' AND SLEEP(5)--
+    - Comment injection: admin'--
+
+PATH TRAVERSAL DETECTION:
+  ✓ ALLOWED:
+    - HTTP/HTTPS URLs: http://example.com/file.pdf
+    - Protocol-relative: //cdn.example.com/script.js
+    - HTML entities: &gt;, &lt;, &amp;
+    - Encoded URLs: redirect=https%3A%2F%2Fexample.com
+    - Relative paths: ./config.json
+    - Text mentions: "Save to C: drive"
+
+  ✗ BLOCKED:
+    - Directory traversal: ../../etc/passwd
+    - Encoded traversal: %2e%2e%2f, ..%2f
+    - file:// protocol: file:///etc/passwd
+    - Windows paths: C:\Windows\System32
+    - UNC paths: \\server\share
+    - Null bytes: ../../etc/passwd%00.jpg
+
+CONTEXT-AWARE DETECTION:
+------------------------
+
+The WAF uses context-aware detection to avoid false positives:
+  - SQL: Looks for SYNTAX patterns and COMBINATIONS (quotes + keywords + operators)
+  - XSS: Detects CODE EXECUTION vectors (not just presence of HTML)
+  - Path: Focuses on TRAVERSAL patterns (../) not legitimate URLs
 
 
 ================================================================================

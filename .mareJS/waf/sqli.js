@@ -1,18 +1,27 @@
 /**
- * SQL Injection Detection Module (Context-Aware)
+ * SQL Injection Detection Module - PERMISSIVE MODE (Context-Aware)
+ *
+ * PHILOSOPHY: Block SQL INJECTION patterns, not SQL-like text
  *
  * Uses context-aware detection inspired by OWASP ModSecurity CRS and libinjection.
  * Looks for SQL SYNTAX patterns and COMBINATIONS of indicators, not just keywords.
  *
  * This approach significantly reduces false positives while catching real attacks.
  *
- * Detects:
+ * BLOCKS:
  * - Quotes combined with SQL keywords (' OR 1=1, " UNION SELECT)
  * - SQL operators with logic (OR 1=1--, AND 'a'='a)
- * - SQL comments (--, /*, #)
+ * - SQL comments in injection context ('-- , /* with SQL keywords)
  * - Stacked queries (; DROP TABLE)
  * - SQL functions in attack context (SLEEP(), BENCHMARK())
  * - SQL syntax patterns (UNION...SELECT)
+ *
+ * ALLOWS:
+ * - SQL keywords in normal text: "I select the blue option"
+ * - Product names with dashes: "T-Shirt -- Blue Edition"
+ * - Code comments without SQL context
+ * - Hashtags in URLs: "#vacation"
+ * - Database-related job descriptions: "Database Administrator with SELECT experience"
  */
 
 /**
@@ -59,29 +68,44 @@ export function detectSQLInjection(input) {
     if (inputLower.includes(pattern)) return true;
   }
 
-  // 2. SQL comments (legitimate text rarely has SQL comments)
-  const sqlComments = [
-    "--",     // SQL comment
-    "/*",     // Multi-line comment start
-    "*/",     // Multi-line comment end
-    "#",      // MySQL comment (but be careful with URLs)
-    ";\x00",  // Null byte with semicolon
-  ];
+  // 2. SQL comments (only block in SQL context)
+  // -- is common in product names: "T-Shirt -- Blue Edition"
+  // /* */ are common in code comments
+  // Only block when they appear in SQL injection context
 
-  for (const comment of sqlComments) {
-    if (normalized.includes(comment)) {
-      // Exception: # is common in URLs/fragments, only flag if with SQL keywords
-      if (comment === "#") {
-        if (
-          /'\s*#|"\s*#|;\s*#/.test(normalized) ||
-          /(select|union|insert|delete|drop|update|exec).*#/i.test(inputLower)
-        ) {
-          return true;
-        }
-      } else {
-        return true;
-      }
+  // Block -- when it's after a quote (SQL comment injection)
+  if (/['"].*--/.test(normalized)) {
+    return true; // Quote followed by SQL comment
+  }
+
+  // Block -- when preceded by SQL keywords
+  if (/(or|and|where|select|union)\s+.*--/i.test(inputLower)) {
+    return true; // SQL keyword + content + --
+  }
+
+  // Block /* and */ (multi-line comments) - these are rare in legitimate input
+  // Exception: allow in code snippets if no SQL keywords nearby
+  if (normalized.includes("/*") || normalized.includes("*/")) {
+    // Only block if there are SQL keywords nearby
+    if (/(select|union|insert|delete|drop|update|exec|or|and)/i.test(inputLower)) {
+      return true;
     }
+  }
+
+  // Block # in SQL context (MySQL comment)
+  // # is common in URLs/fragments, only flag if with SQL keywords
+  if (normalized.includes("#")) {
+    if (
+      /'\s*#|"\s*#|;\s*#/.test(normalized) ||
+      /(select|union|insert|delete|drop|update|exec).*#/i.test(inputLower)
+    ) {
+      return true;
+    }
+  }
+
+  // Null byte with semicolon
+  if (normalized.includes(";\x00")) {
+    return true;
   }
 
   // 3. Stacked queries (semicolon + SQL command)
