@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath, pathToFileURL } from "url";
 import { detectPathTraversal } from "./waf/pathtraversal.js";
 import { wafMiddleware } from "./waf/waf.js";
-
+import cookieParser from "cookie-parser";
 import { getMarecors } from "../api/__mare_serversettings/cors.js";
 import { getMareSession } from "../api/__mare_serversettings/session.js";
 import { Server_Startup } from "../api/__mare_serversettings/server_startup.js";
@@ -23,6 +23,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const jsonLimit = process.env.JSON_LIMIT || "256mb";
 app.use(express.json({ limit: jsonLimit }));
+app.use(cookieParser());
 
 // Global rate limiter
 //app.use(mareRateLimiter);
@@ -156,7 +157,30 @@ app.use("/api",
     }
   }
 
-  if (routeHandler) return routeHandler(req, res, next);
+ // if (routeHandler) return routeHandler(req, res, next);
+
+      if (routeHandler) {
+      try {
+        return routeHandler(req, res, next);
+      } catch (error) {
+        console.error(`[MARE SERVER] Error in route handler for ${req.path}:`, error);
+        
+        // Check if headers have already been sent
+        if (!res.headersSent) {
+          return res.status(500).json({
+            error: "Internal Server Error",
+            message: "An error occurred while processing your request",
+            path: req.path
+          });
+        } else {
+          // Headers already sent, we can't send another response
+          console.error(`[MARE SERVER] Cannot send error response - headers already sent for ${req.path}`);
+          return;
+        }
+      }
+    }
+
+
 
   const defaultFilePath = "api/default.js";
   if (fs.existsSync(defaultFilePath)) {
