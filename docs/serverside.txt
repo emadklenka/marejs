@@ -218,9 +218,10 @@ WAF MODES:
 
 The WAF can operate in different modes configured via environment variables:
 
-MODE 1: BLOCK (Default)
+MODE 1: BLOCK
   - Blocks malicious requests with 403 Forbidden
   - Logs attack details to console
+  - Requires WAF=true to enable
 
   WAF_MODE=block
 
@@ -243,19 +244,19 @@ MODE 3: DISABLED
 ENVIRONMENT VARIABLES:
 ----------------------
 
-WAF=true                   Enable/disable WAF (default: true)
+WAF=false                  Enable/disable WAF (default: false)
 WAF_MODE=block             block | log | off (default: block)
 WAF_SAFE_ROUTES=true       Enable safe routes config (default: true)
 WAF_STRICT=false           Ignore safe routes, check everything (default: false)
 
 
-DISABLING THE WAF:
-------------------
+ENABLING THE WAF:
+-----------------
 
-Option 1 - Completely disable:
+Option 1 - Enable WAF:
   Create or edit .env file in root:
 
-  WAF=false
+  WAF=true
 
 Option 2 - Log only mode:
 
@@ -385,7 +386,7 @@ NODE_ENV=development         Environment (development | production)
 
 WAF CONFIGURATION:
 ------------------
-WAF=true                     Enable/disable WAF
+WAF=false                    Enable/disable WAF
 WAF_MODE=block               block | log | off
 WAF_SAFE_ROUTES=true         Enable safe routes config
 WAF_STRICT=false             Ignore safe routes entirely

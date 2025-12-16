@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
+    "ag-grid-community": "^35.0.0",
+    "ag-grid-react": "^35.0.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -31,8 +33,11 @@
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "react": "^18.3.1",
+    "react-datepicker": "^9.0.0",
     "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.26.2",
+    "sonner": "^2.0.7",
     "tailwindcss": "^4.1.11",
     "theme-change": "^2.5.0",
     "ws": "^8.18.2"

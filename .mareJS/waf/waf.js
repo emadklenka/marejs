@@ -68,7 +68,7 @@ function scanObject(obj, prefix = "", checks = ["pathtraversal", "xss", "sqli"],
  * Check if route matches safe routes configuration
  */
 function isRouteSafe(req) {
-  const wafEnabled = process.env.WAF !== "false";
+  const wafEnabled = process.env.WAF === "true";
   const safeRoutesEnabled = process.env.WAF_SAFE_ROUTES !== "false";
   const strictMode = process.env.WAF_STRICT === "true";
 
@@ -121,7 +121,7 @@ function isRouteSafe(req) {
  * Main WAF Middleware
  */
 export function wafMiddleware(req, res, next) {
-  const wafEnabled = process.env.WAF !== "false"; // Default: enabled
+  const wafEnabled = process.env.WAF === "true"; // Default: disabled
   const wafMode = process.env.WAF_MODE || "block"; // block | log | off
 
   if (!wafEnabled || wafMode === "off") {

@@ -1,22 +1,964 @@
 @import "tailwindcss";
 @plugin "daisyui";
-@plugin "daisyui" {
-  /* themes: all; */
+
+/* Chart Color Variables */
+:root {
+  --chart-primary-light: #594BDB;
+  --chart-primary-dark: #6d5dfc;
+  --chart-secondary-light: #752FCF;
+  --chart-secondary-dark: #8b7cff;
+  --chart-accent-light: #fe754a;
+  --chart-accent-dark: #ff8a68;
+  --chart-accent-light-alt: #ff8a68;
+  --chart-accent-dark-alt: #ffa07a;
+  --chart-text-light: #1d1652;
+  --chart-text-dark: #e5e7ff;
+  --chart-grid-light: #e5e7eb;
+  --chart-grid-dark: #2d2663;
+  
+  /* Enhanced bar chart gradient colors */
+  --chart-bar-start-light: #8B5CF6;
+  --chart-bar-end-light: #EC4899;
+  --chart-bar-start-dark: #A78BFA;
+  --chart-bar-end-dark: #F472B6;
 }
 
-/* Your custom theme */
- 
-@plugin "daisyui/theme" {
-  name: "light";
-  default: true;
-
-  --color-base-100: oklch(1.0 0.25 145); /* Light green background */
-}
-
+/* Cascade-Inspired Typography */
 body {
-  @apply leading-relaxed;
+  @apply leading-relaxed antialiased;
+  font-family: 'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* RTL Support */
+[dir="rtl"] body {
+  font-family: 'Cairo', 'Segoe UI', sans-serif;
+  font-weight: 500;
+}
+
+/* Modern Heading Styles - Poppins for Headlines */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  @apply font-bold tracking-tight;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  @apply text-5xl font-extrabold;
+  line-height: 1.1;
+}
+
+h2 {
+  @apply text-4xl font-bold;
+  line-height: 1.2;
+}
+
+h3 {
+  @apply text-3xl font-bold;
+  line-height: 1.3;
+}
+
+/* Purple Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* RTL Adjustments */
+[dir="rtl"] .menu li > * {
+  text-align: right;
+}
+
+[dir="rtl"] .navbar {
+  direction: rtl;
+}
+
+[dir="rtl"] .dropdown-content {
+  left: 0;
+  right: auto;
+}
+
+/* Specific RTL fix for navbar dropdown-end */
+[dir="rtl"] .navbar .dropdown-end .dropdown-content {
+  left: 0 !important;
+  right: auto !important;
+  transform: translateX(0) !important;
+}
+
+[dir="rtl"] .navbar .dropdown-end .dropdown-content.menu {
+  left: 0 !important;
+  right: auto !important;
+  transform: translateX(0) !important;
+}
+
+/* Enhanced Link Styles */
 a {
-  @apply text-blue-500 underline hover:text-blue-700;
+  @apply text-primary hover:opacity-80 transition-all duration-200 no-underline;
+}
+
+a:hover {
+  @apply underline decoration-2 underline-offset-2;
+}
+
+/* Modern Focus Styles */
+*:focus {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-base-100;
+}
+
+button:focus-visible,
+a:focus-visible {
+  @apply ring-2 ring-primary ring-offset-2 ring-offset-base-100;
+}
+
+/* Smooth Transitions */
+button, a, input, select, textarea {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Custom Scrollbar - Cascade Style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-base-100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  @apply rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #752FCF 0%, #594BDB 100%);
+}
+
+/* Card Enhancements - Cascade Style */
+.card {
+  @apply transition-all duration-300 rounded-xl;
+  border: 1px solid;
+  @apply border-base-300;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+.card:hover {
+  @apply shadow-2xl scale-[1.02];
+  border-color: rgba(89, 75, 219, 0.3);
+}
+
+[data-theme="dark"] .card {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Button Enhancements - Cascade Style */
+.btn {
+  @apply font-semibold tracking-wide rounded-lg;
+  text-transform: none;
+  font-family: 'Poppins', sans-serif;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn:active {
+  @apply scale-95;
+}
+
+/* Primary Gradient Button */
+.btn-primary {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  border: none;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #752FCF 0%, #8960e8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(89, 75, 219, 0.3);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: linear-gradient(135deg, #752FCF 0%, #9580e8 100%);
+  border: none;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #9580e8 0%, #a895f0 100%);
+}
+
+/* Accent Button */
+.btn-accent {
+  background: linear-gradient(135deg, #fe754a 0%, #ff8a68 100%);
+  border: none;
+  color: white;
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, #ff8a68 0%, #ffa085 100%);
+}
+
+/* Outline Button */
+.btn-outline {
+  border: 2px solid #594BDB;
+  color: #594BDB;
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  border-color: transparent;
+}
+
+/* Badge Modern Styling */
+.badge {
+  @apply font-semibold tracking-wide rounded-full;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar Menu Links - Cascade Style */
+.menu li > * {
+  @apply font-semibold rounded-lg;
+  font-size: 0.95rem;
+  font-family: 'Mulish', sans-serif;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+[data-theme="light"] .menu li > * {
+  color: #1d1652;
+}
+
+[data-theme="dark"] .menu li > * {
+  color: #e5e7ff;
+}
+
+.menu li > *:hover {
+  @apply font-bold;
+  background: linear-gradient(135deg, rgba(89, 75, 219, 0.1) 0%, rgba(117, 47, 207, 0.1) 100%);
+  transform: translateX(4px);
+}
+
+/* Active Link - Purple Gradient */
+.menu li > *:where(.active) {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  @apply font-bold shadow-lg;
+}
+
+/* Collapsed Sidebar Styles */
+.menu li > * {
+  justify-content: flex-start;
+}
+
+/* Sidebar collapse button */
+.sidebar-collapse-btn {
+  transition: all 0.3s ease;
+}
+
+/* Enhanced Navbar - Cascade Style */
+.navbar {
+  @apply backdrop-blur-sm;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid;
+  @apply border-base-300;
+}
+
+[data-theme="dark"] .navbar {
+  background: rgba(12, 9, 36, 0.95);
+}
+
+.navbar .btn-ghost {
+  @apply font-bold;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.25rem;
+}
+
+[data-theme="light"] .navbar {
+  color: #1d1652;
+}
+
+[data-theme="dark"] .navbar {
+  color: #e5e7ff;
+}
+
+/* Fix navbar icons visibility for react-icons */
+.navbar .btn-circle,
+.navbar .btn-square,
+.navbar .btn-ghost {
+  color: inherit;
+}
+
+/* Ensure all SVG icons in navbar are visible */
+.navbar svg,
+.navbar .btn-circle svg,
+.navbar .btn-square svg,
+.navbar .btn-ghost svg,
+.navbar .indicator svg,
+.navbar .dropdown svg,
+.navbar .avatar svg {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+[data-theme="light"] .navbar .btn-circle,
+[data-theme="light"] .navbar .btn-square,
+[data-theme="light"] .navbar .btn-ghost,
+[data-theme="light"] .navbar .indicator,
+[data-theme="light"] .navbar .dropdown,
+[data-theme="light"] .navbar .avatar {
+  color: #1d1652 !important;
+}
+
+[data-theme="light"] .navbar .btn-circle svg,
+[data-theme="light"] .navbar .btn-square svg,
+[data-theme="light"] .navbar .btn-ghost svg {
+  color: #1d1652 !important;
+  fill: #1d1652 !important;
+}
+
+[data-theme="dark"] .navbar .btn-circle,
+[data-theme="dark"] .navbar .btn-square,
+[data-theme="dark"] .navbar .btn-ghost,
+[data-theme="dark"] .navbar .indicator,
+[data-theme="dark"] .navbar .dropdown,
+[data-theme="dark"] .navbar .avatar {
+  color: #e5e7ff !important;
+}
+
+[data-theme="dark"] .navbar .btn-circle svg,
+[data-theme="dark"] .navbar .btn-square svg,
+[data-theme="dark"] .navbar .btn-ghost svg {
+  color: #e5e7ff !important;
+  fill: #e5e7ff !important;
+}
+
+/* Specific fix for avatar button */
+.navbar .avatar .w-8 {
+  color: white !important;
+}
+
+
+/* Fix for sidebar icons */
+aside svg,
+.menu svg {
+  display: block !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+[data-theme="light"] aside svg,
+[data-theme="light"] .menu svg {
+  color: #1d1652 !important;
+  stroke: #1d1652 !important;
+  fill: #1d1652 !important;
+}
+
+[data-theme="dark"] aside svg,
+[data-theme="dark"] .menu svg {
+  color: #e5e7ff !important;
+  stroke: #e5e7ff !important;
+  fill: #e5e7ff !important;
+}
+
+/* Fix for avatar button icons */
+.avatar svg {
+  display: block !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+[data-theme="light"] .avatar svg {
+  color: white !important;
+  stroke: white !important;
+  fill: white !important;
+}
+
+[data-theme="dark"] .avatar svg {
+  color: white !important;
+  stroke: white !important;
+  fill: white !important;
+}
+
+/* Input Enhancements - Cascade Style */
+.input, .select, .textarea {
+  @apply transition-all duration-200 rounded-lg;
+  border: 1px solid;
+  @apply border-base-300;
+  padding: 0.75rem 1rem;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  @apply ring-2 ring-primary ring-offset-2 ring-offset-base-100;
+  border-color: #594BDB;
+}
+
+/* Select Dropdown Enhancements */
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23594BDB' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+  min-height: 3rem;
+  height: auto;
+  line-height: 1.6;
+}
+
+[data-theme="dark"] .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a39cf2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+.select option {
+  @apply bg-base-200 text-base-content;
+  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
+  line-height: 1.6;
+  font-size: 1rem;
+  height: auto;
+}
+
+[data-theme="light"] .select {
+  background-color: white;
+  color: #1d1652;
+}
+
+[data-theme="light"] .select option {
+  background-color: white;
+  color: #1d1652;
+  padding: 0.75rem 1rem;
+  line-height: 1.6;
+  min-height: 2.75rem;
+}
+
+[data-theme="dark"] .select {
+  background-color: #1a1535;
+  color: #e5e7ff;
+}
+
+[data-theme="dark"] .select option {
+  background-color: #1a1535;
+  color: #e5e7ff;
+  padding: 0.75rem 1rem;
+  line-height: 1.6;
+  min-height: 2.75rem;
+}
+
+/* Alert Modern Styling - Cascade */
+.alert {
+  @apply rounded-xl shadow-md;
+  border-left: 4px solid;
+}
+
+.alert-info {
+  border-left-color: #594BDB;
+  background: linear-gradient(135deg, rgba(89, 75, 219, 0.15) 0%, rgba(117, 47, 207, 0.15) 100%);
+  color: #594BDB;
+}
+
+[data-theme="dark"] .alert-info {
+  background: linear-gradient(135deg, rgba(89, 75, 219, 0.25) 0%, rgba(117, 47, 207, 0.25) 100%);
+  color: #a39cf2;
+}
+
+.alert-success {
+  border-left-color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+[data-theme="dark"] .alert-success {
+  background: rgba(34, 197, 94, 0.25);
+  color: #4ade80;
+}
+
+.alert-warning {
+  border-left-color: #fe754a;
+  background: rgba(254, 117, 74, 0.15);
+  color: #ea580c;
+}
+
+[data-theme="dark"] .alert-warning {
+  background: rgba(254, 117, 74, 0.25);
+  color: #fb923c;
+}
+
+.alert-error {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+[data-theme="dark"] .alert-error {
+  background: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border-left-color: #f87171;
+}
+
+/* Stats with Floating Animation */
+.stat {
+  @apply transition-all duration-300;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  position: relative;
+}
+
+.stats {
+  @apply rounded-xl shadow-lg bg-base-200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stats-horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+}
+
+.stats-horizontal .stat {
+  flex: 1;
+  min-width: 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stats-horizontal .stat:last-child {
+  border-right: none;
+}
+
+.stats-vertical .stat {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stats-vertical .stat:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 640px) {
+  .stats-horizontal {
+    flex-direction: column;
+  }
+
+  .stats-horizontal .stat {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-horizontal .stat:last-child {
+    border-bottom: none;
+  }
+}
+
+.stat-title {
+  @apply text-sm font-medium;
+  opacity: 0.6;
+  grid-column: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  @apply font-bold text-3xl;
+  grid-column: 1;
+  line-height: 1;
+  margin: 0.25rem 0;
+}
+
+.stat-desc {
+  @apply text-xs;
+  opacity: 0.6;
+  grid-column: 1;
+  margin-top: 0.5rem;
+}
+
+.stat-figure {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.stat:hover {
+  animation: float 2s ease-in-out infinite;
+  box-shadow: 0 12px 24px rgba(89, 75, 219, 0.2);
+}
+
+/* Progress Bar - Purple Gradient */
+.progress {
+  @apply rounded-full shadow-sm;
+}
+
+.progress-primary {
+  background: linear-gradient(90deg, #594BDB 0%, #752FCF 100%);
+}
+
+/* Toggle Modern Styling */
+.toggle {
+  @apply transition-all duration-300;
+}
+
+.toggle:checked {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  @apply shadow-md;
+}
+
+/* Tabs - Cascade Style */
+.tabs-boxed {
+  @apply rounded-xl shadow-sm;
+  background: rgba(89, 75, 219, 0.05);
+}
+
+.tab {
+  @apply font-semibold rounded-lg;
+  font-family: 'Poppins', sans-serif;
+}
+
+.tab-active {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  @apply font-bold shadow-md;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  @apply backdrop-blur-md;
+  background: rgba(12, 9, 36, 0.6);
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  animation: spin 1s linear infinite;
+}
+
+/* Glassmorphism Effect - Cascade Style */
+.glass {
+  @apply backdrop-blur-xl rounded-xl;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(89, 75, 219, 0.2);
+  box-shadow: 0 8px 32px rgba(89, 75, 219, 0.1);
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(12, 9, 36, 0.9);
+  border: 1px solid rgba(125, 109, 223, 0.2);
+}
+
+/* Purple Gradient Backgrounds */
+.gradient-purple {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+}
+
+.gradient-purple-light {
+  background: linear-gradient(135deg, rgba(89, 75, 219, 0.1) 0%, rgba(117, 47, 207, 0.1) 100%);
+}
+
+/* Coral Gradient */
+.gradient-coral {
+  background: linear-gradient(135deg, #fe754a 0%, #ff8a68 100%);
+}
+
+/* Animated Gradient Background - Hero Style */
+.hero-gradient {
+  background: radial-gradient(ellipse at top left, rgba(89, 75, 219, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom right, rgba(117, 47, 207, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at center, rgba(254, 117, 74, 0.1) 0%, transparent 70%);
+}
+
+/* AG Grid Theme - Minimal styling for new Theme API */
+.ag-root-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+[data-theme="dark"] .ag-root-wrapper {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Header styling */
+.ag-header {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+/* Selected row styling */
+.ag-row-selected {
+  border-left: 3px solid #594BDB;
+}
+
+[data-theme="dark"] .ag-row-selected {
+  border-left-color: #752FCF;
+}
+
+/* Pagination styling */
+.ag-paging-button[aria-current="true"] {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  border-color: transparent;
+}
+
+/* Date Picker - Cascade Style */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+.react-datepicker {
+  @apply font-sans rounded-xl shadow-2xl;
+  border: 2px solid #dadcfb;
+  z-index: 9999;
+}
+
+.react-datepicker__header {
+  @apply rounded-t-xl;
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  border-bottom: none;
+  padding-top: 1rem;
+}
+
+.react-datepicker__current-month {
+  @apply font-bold;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.8);
+  @apply font-semibold;
+}
+
+.react-datepicker__day {
+  @apply transition-all duration-200 rounded-lg font-medium;
+}
+
+.react-datepicker__day:hover {
+  background: rgba(89, 75, 219, 0.2);
+  @apply scale-110;
+}
+
+.react-datepicker__day--selected {
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  @apply font-bold shadow-md;
+}
+
+.react-datepicker__day--today {
+  @apply font-bold;
+  border: 2px solid #594BDB;
+  background: rgba(89, 75, 219, 0.1);
+}
+
+.react-datepicker__navigation {
+  top: 1rem;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+/* Fix for overlapping label issue */
+.react-datepicker-popper[data-placement^="bottom"] {
+  margin-top: 0.5rem;
+}
+
+.react-datepicker-popper[data-placement^="top"] {
+  margin-bottom: 0.5rem;
+}
+
+/* Utility Classes */
+.shadow-purple {
+  box-shadow: 0 10px 40px rgba(89, 75, 219, 0.3);
+}
+
+.shadow-purple-lg {
+  box-shadow: 0 20px 60px rgba(89, 75, 219, 0.4);
+}
+
+/* Numbered Badges - Cascade Style */
+.numbered-badge {
+  @apply inline-flex items-center justify-center;
+  @apply rounded-full font-bold;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #594BDB 0%, #752FCF 100%);
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sonner Toast Styling - Cascade Theme */
+[data-sonner-toast] {
+  font-family: 'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] [data-sonner-toast] {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  color: #1d1652 !important;
+}
+
+[data-theme="dark"] [data-sonner-toast] {
+  background: #1a1535 !important;
+  border: 1px solid #2d2650 !important;
+  color: #e5e7ff !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  border-left: 4px solid #22c55e !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  border-left: 4px solid #ef4444 !important;
+}
+
+[data-theme="dark"] [data-sonner-toast][data-type="error"] {
+  border-left: 4px solid #f87171 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+[data-sonner-toast][data-type="warning"] {
+  border-left: 4px solid #fe754a !important;
+}
+
+[data-sonner-toast][data-type="info"] {
+  border-left: 4px solid #594BDB !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-weight: 600 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+[data-sonner-toast] [data-description] {
+  opacity: 0.8 !important;
+}
+
+/* Fix for dropdown menu z-index in light theme */
+.dropdown-content {
+  z-index: 999999 !important;
+}
+
+[data-theme="light"] .dropdown-content {
+  z-index: 999999 !important;
+  background-color: #f8f9ff !important;
+  border: 1px solid #dadcfb !important;
+}
+
+[data-theme="dark"] .dropdown-content {
+  z-index: 999999 !important;
+  background-color: #1a1443 !important;
+  border: 1px solid #2d2663 !important;
+}
+
+/* Ensure dropdown appears above cards with shadows */
+.card {
+  z-index: 1;
+}
+
+.card.shadow-xl {
+  z-index: 10;
+}
+
+/* Ensure navbar dropdown appears above all content */
+.navbar .dropdown-content {
+  z-index: 999999 !important;
+}
+
+/* Fix for stacking context with transform on navbar */
+.navbar {
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* Fix card stacking context issues */
+.card {
+  z-index: auto;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.card.shadow-xl {
+  z-index: auto;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Ensure dropdown is above all card elements */
+.dropdown-content {
+  isolation: isolate;
+  z-index: 999999 !important;
+}
+
+/* Main content should not interfere with dropdown */
+main {
+  isolation: isolate;
+}
+
+/* Ensure dropdown menu is always on top */
+.dropdown-menu {
+  z-index: 999999 !important;
+}
+
+/* Specific fix for user dropdown in header */
+.navbar .dropdown-end .dropdown-content {
+  z-index: 9999999 !important;
+  position: absolute !important;
+}
+
+/* Force dropdown to appear above cards in light theme */
+[data-theme="light"] .navbar .dropdown-end .dropdown-content {
+  z-index: 9999999 !important;
+  position: absolute !important;
+}
+
+/* Force dropdown to appear above cards in dark theme */
+[data-theme="dark"] .navbar .dropdown-end .dropdown-content {
+  z-index: 9999999 !important;
+  position: absolute !important;
+}
+
+/* Fix RTL dropdown positioning */
+[dir="rtl"] .navbar .dropdown-end .dropdown-content {
+  right: 0 !important;
+  left: auto !important;
+  transform: translateX(-100%) !important;
+}
+
+/* Ensure dropdown stays within viewport in RTL */
+[dir="rtl"] .navbar .dropdown-end .dropdown-content.menu {
+  right: 0 !important;
+  left: auto !important;
+  transform: translateX(-100%) !important;
 }

@@ -100,13 +100,13 @@ export default (req, res) => {
 
 ### 🛡️ Built-In Web Application Firewall (WAF)
 
-**This is what sets MareJS apart.** Most frameworks leave security as an afterthought. MareJS comes with enterprise-grade protection **out of the box**:
+**This is what sets MareJS apart.** Most frameworks leave security as an afterthought. MareJS comes with enterprise-grade protection **available by default**:
 
 - ✅ **XSS Protection** - Blocks script injection attacks
 - ✅ **SQL Injection Defense** - Context-aware detection with minimal false positives
 - ✅ **Path Traversal Prevention** - Stops directory traversal attacks
 - ✅ **Smart Detection** - Allows legitimate data while blocking attacks
-- ✅ **Zero Configuration** - Works immediately, customize as needed
+- ✅ **Zero Configuration** - Enable when needed with `WAF=true`
 
 Example: WAF automatically blocks this attack:
 ```bash
@@ -169,15 +169,16 @@ Get up and running in 60 seconds:
 ### 1. Create Your Project
 
 ```bash
-npx github:/emadklenka/marejs my-app
+npx github:/emadklenka/marejs 
+[ENTER YOUR APP NAME EX my-app]
 cd my-app
-npm install
+pnpm install
 ```
 
 ### 2. Start Development Server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### 3. Start Building! 🎉
@@ -187,7 +188,7 @@ Your app is now running at **http://localhost:4000**
 - 📄 Add pages in `pages/` folder
 - 🔌 Add APIs in `api/` folder
 - 🎨 Customize layouts in `_MainLayout.jsx`
-- 🛡️ Security is already enabled (WAF protects you)
+- 🛡️ Security available (enable WAF in .env when needed)
 
 **That's it!** No webpack config, no routing setup, no security configuration. Just code.
 
@@ -571,7 +572,7 @@ After you're comfortable with the basics:
 MareJS was born from **real frustration with Next.js complexity** while building production SaaS applications. We loved the developer experience but needed:
 - **CSR instead of SSR** (SaaS apps are behind auth anyway)
 - **Full Express control** (not serverless limitations)
-- **Built-in security** (WAF protecting customer data)
+- **Built-in security** (WAF available to protect customer data)
 - **Simple deployment** (VPS/Docker, not vendor lock-in)
 
 So we built MareJS - keeping Next.js's brilliant file-based routing while removing everything that fought against SaaS architecture.
