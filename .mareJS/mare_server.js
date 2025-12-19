@@ -253,6 +253,28 @@ async function setupWSSRouting(server) {
 
   console.log('[WSS] Incoming route:', route);
 
+  // Parse cookies for WebSocket upgrade requests
+  const cookies = req.headers.cookie ? req.headers.cookie.split(';').reduce((acc, cookie) => {
+    const [key, value] = cookie.trim().split('=');
+    acc[key] = value;
+    return acc;
+  }, {}) : {};
+
+  // Create a mock request object with session data
+  const mockReq = {
+    headers: req.headers,
+    cookies: cookies,
+    url: req.url
+  };
+
+  // Parse session using the same session middleware
+  const sessionMiddleware = getMareSession();
+  await new Promise((resolve, reject) => {
+    sessionMiddleware(mockReq, {}, () => {
+      req.session = mockReq.session;
+      resolve();
+    });
+  });
 
   if (!wshandlers[route]) {
     const handler = await loadWSHandler(route);
@@ -265,6 +287,7 @@ async function setupWSSRouting(server) {
 
   wss.handleUpgrade(req, socket, head, (ws) => {
     req.query = queryParams; // ✅ Attach parsed query params to req
+    req.session = mockReq.session; // ✅ Attach session to req
     wshandlers[route](ws, req);
   });
 });
