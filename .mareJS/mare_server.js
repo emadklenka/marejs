@@ -161,36 +161,34 @@ app.use("/api",
 
       if (routeHandler) {
       try {
-        return routeHandler(req, res, next);
+        return await routeHandler(req, res, next);
       } catch (error) {
-        console.error(`[MARE SERVER] Error in route handler for ${req.path}:`, error);
-        
-        // Check if headers have already been sent
+        console.error(`[MARE SERVER] Error in route handler for ${req.method} ${req.path}:`, error);
         if (!res.headersSent) {
           return res.status(500).json({
             error: "Internal Server Error",
             message: "An error occurred while processing your request",
             path: req.path
           });
-        } else {
-          // Headers already sent, we can't send another response
-          console.error(`[MARE SERVER] Cannot send error response - headers already sent for ${req.path}`);
-          return;
         }
+        return;
       }
     }
-
-
 
   const defaultFilePath = "api/default.js";
   if (fs.existsSync(defaultFilePath)) {
     routeHandler = await dynamicImport(defaultFilePath);
     try {
-      return routeHandler(req, res, next);
+      return await routeHandler(req, res, next);
     } catch (e) {
-      console.error("Error in /api/default route:", e);
-      res.status(500).end("Server Error");
+      console.error(`[MARE SERVER] Error in /api/default route for ${req.method} ${req.path}:`, e);
+      if (!res.headersSent) res.status(500).end("Server Error");
     }
+    return;
+  }
+
+  if (!res.headersSent) {
+    return res.status(404).json({ error: "Not Found", path: req.path });
   }
 });
 

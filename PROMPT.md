@@ -110,6 +110,37 @@ export default async function handler(req, res) {
 
 ---
 
+## 🔐 Session & Auth
+
+Sessions are available on every API handler via `req.session` (express-session, 2h cookie).
+
+```js
+// api/profile.js
+export default async function handler(req, res) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  res.json({ userId: req.session.userId });
+}
+```
+
+To set session data (e.g. after login):
+```js
+req.session.userId = user.id;
+```
+
+To destroy session (logout):
+```js
+req.session.destroy();
+```
+
+> **Important:** `api/__mare_serversettings/middleware.js` runs on **every** `/api` request.
+> By default it **blocks all routes with 401** except `/api/public/*`.
+> Edit this file to implement your authentication logic (e.g. check `req.session.userId`).
+> Do **not** rely on it being a passthrough — if your route returns 401 unexpectedly, check this file first.
+
+---
+
 ## ✅ How to Work in MareJS
 
 When asked to build a feature:
@@ -134,5 +165,3 @@ When asked to build a feature:
 - Static assets go in `/public` and are accessed via `/assets/...`
 
 ---
-
-Happy coding with MareJS! 🚀
